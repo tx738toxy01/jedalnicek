@@ -333,6 +333,12 @@
             }[tag] || tag));
         }
 
+        // Odstránenie diakritiky pre logiku na pozadí
+        function removeDiacritics(str) {
+            if (!str) return "";
+            return str.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
         // Pamäť
         function loadStorage(key, fallback) {
             try {
@@ -650,7 +656,7 @@
         }
 
         function filterMeals() {
-            let query = document.getElementById("searchInput").value.toLowerCase();
+            let query = removeDiacritics(document.getElementById("searchInput").value.toLowerCase());
             let resultsDiv = document.getElementById("searchResults");
             resultsDiv.innerHTML = "";
             let pool = pools[currentSearchMIdx] || [];
@@ -664,7 +670,7 @@
                     let ingredients = Array.isArray(meal.ing) ? meal.ing : [];
                     
                     // Bezpečné spojenie textov pre vyhľadávanie
-                    let textToSearch = (mealTitle + " " + ingredients.map(i => i.text || "").join(" ")).toLowerCase();
+                    let textToSearch = removeDiacritics((mealTitle + " " + ingredients.map(i => i.text || "").join(" ")).toLowerCase());
                     
                     if (textToSearch.includes(query)) {
                         resultsCount++;
@@ -830,12 +836,14 @@
         }
 
         function getCategory(name) {
-            const lower = name.toLowerCase();
-            if (lower.match(/(kurac|bravč|hovädz|morč|losos|tuniak|tresk|makrel|pstruh|kapor|zubáč|mäso|pŕs)/)) return '🥩 Mäso a Ryby';
-            if (lower.match(/(jogurt|mliek|syr|tvaroh|vajc|masl|skyr|kefír|mozzarella|parmezán|cottage)/)) return '🥛 Mliečne výrobky a Vajcia';
-            if (lower.match(/(jablk|čučoried|brokolic|paradajk|rukol|banán|hrušk|špenát|mrkv|kapust|malin|pomaranč|baklažán|jahôd|uhork|fazuľ|kukuric|šampiňón|hrášok|olív|cibuľ|cesnak|fig|cuket|paprik|šalát|zelenin)/)) return '🥦 Ovocie a Zelenina';
-            if (lower.match(/(vločk|chleb|quino|šošovic|ryž|zemiak|batat|cestovin|bulgur|kuskus|tarhoň|pohánk|knäckebrot|tortil|cícer|hummus)/)) return '🍞 Prílohy a Pečivo';
-            if (lower.match(/(chia|mandl|olej|orech|arašid|ľanov|tekvic|semien|kešu|lieskov)/)) return '🥜 Tuky, Orechy a Semená';
+            // Text najprv zbavíme diakritiky a dáme na malé písmená
+            const lower = removeDiacritics(name.toLowerCase());
+            
+            if (lower.match(/(kurac|bravc|hovadz|morc|losos|tuniak|tresk|makrel|pstruh|kapor|zubac|maso|prs|sunk|parky)/)) return '🥩 Mäso a Ryby';
+            if (lower.match(/(jogurt|mliek|syr|tvaroh|vajc|masl|skyr|kefir|mozzarella|parmezan|cottage|bielk|zltk)/)) return '🥛 Mliečne výrobky a Vajcia';
+            if (lower.match(/(jablk|cucoried|brokolic|paradajk|rukol|banan|hrusk|spenat|mrkv|kapust|malin|pomaranc|baklazan|jahod|uhork|fazul|kukuric|sampinon|hrasok|oliv|cibul|cesnak|fig|cuket|paprik|salat|zelenin|brosk|marhu|sliv|hrozn|melon)/)) return '🥦 Ovocie a Zelenina';
+            if (lower.match(/(vlock|chleb|quino|sosovic|ryz|zemiak|batat|cestovin|bulgur|kuskus|tarhon|pohank|knackebrot|tortil|cicer|hummus|krupic|muc|muka|zeml|rozok)/)) return '🍞 Prílohy a Pečivo';
+            if (lower.match(/(chia|mandl|olej|orech|arasid|lanov|tekvic|semien|kesu|lieskov|sezam|pistac|kokos|mast)/)) return '🥜 Tuky, Orechy a Semená';
             return '🛒 Ostatné';
         }
 
@@ -938,26 +946,28 @@
                 let itemA = aggregated[a]; 
                 let itemB = aggregated[b];
                 let result = 0;
+                
+                let cleanNameA = removeDiacritics(itemA.name.trim().toLowerCase());
+                let cleanNameB = removeDiacritics(itemB.name.trim().toLowerCase());
 
                 if (sortMethod === "qty") {
                     let weightA = getUnitWeight(itemA.unit);
                     let weightB = getUnitWeight(itemB.unit);
                     
-                    // Najprv radíme gramy, potom kusy (ignorujeme smer, gramy sú vždy prvé)
                     if (weightA !== weightB) return weightA - weightB; 
                     
                     result = itemA.qty - itemB.qty;
-                    if (result === 0) result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk');
+                    if (result === 0) result = cleanNameA.localeCompare(cleanNameB);
                 } 
                 else if (sortMethod === "cat") {
                     let catA = getCategory(itemA.name);
                     let catB = getCategory(itemB.name);
                     
-                    if (catA === catB) result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk');
+                    if (catA === catB) result = cleanNameA.localeCompare(cleanNameB);
                     else result = getCategoryWeight(catA) - getCategoryWeight(catB);
                 } 
                 else { 
-                    result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk'); 
+                    result = cleanNameA.localeCompare(cleanNameB); 
                 }
 
                 return result * dirMultiplier;
