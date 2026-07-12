@@ -967,23 +967,28 @@
                     if (weightA !== weightB) return weightA - weightB; 
                     
                     result = itemA.qty - itemB.qty;
-                    if (result === 0) let nameOnlyA = itemA.name.replace(/^[0-9.,\s]+/i, "").trim();
-let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
-result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase()));
+                    if (result === 0) {
+                        let nameOnlyA = itemA.name.replace(/^[0-9.,\s]+/i, "").trim();
+                        let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
+                        result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase()));
+                    }
                 } 
                 else if (sortMethod === "cat") {
                     let catA = getCategory(itemA.name);
                     let catB = getCategory(itemB.name);
                     
-                    if (catA === catB) let nameOnlyA = itemA.name.replace(/^[0-9.,\s]+/i, "").trim();
-let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
-result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase()));
-                    else result = getCategoryWeight(catA) - getCategoryWeight(catB);
+                    if (catA === catB) {
+                        let nameOnlyA = itemA.name.replace(/^[0-9.,\s]+/i, "").trim();
+                        let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
+                        result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase()));
+                    } else {
+                        result = getCategoryWeight(catA) - getCategoryWeight(catB);
+                    }
                 } 
                 else { 
                     let nameOnlyA = itemA.name.replace(/^[0-9.,\s]+/i, "").trim();
-let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
-result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase())); 
+                    let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
+                    result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase())); 
                 }
 
                 return result * dirMultiplier;
