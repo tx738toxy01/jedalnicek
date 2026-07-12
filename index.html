@@ -197,6 +197,33 @@
         .search-result-item:hover { border-color: var(--primary); background: var(--primary-light); transform: translateX(5px); }
         .search-result-title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); }
         .search-result-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+/* Toast notifikácia v strede obrazovky */
+        .toast-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(41, 37, 36, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: var(--radius-lg);
+            font-size: 1.2rem;
+            font-weight: 600;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            box-shadow: var(--shadow-modal);
+            backdrop-filter: blur(5px);
+            pointer-events: none;
+        }
+        .toast-message.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
     </style>
 </head>
 <body>
@@ -322,6 +349,7 @@
         </div>
     </div>
 
+<div id="centerToast" class="toast-message"></div>
     <script src="data.js"></script>
 
     <script>
@@ -367,16 +395,31 @@
         let currentSearchMIdx = 0;
 
 let pinnedDay = loadStorage('pinnedDay', null);
+        let toastTimeout;
+
+        function showToast(message) {
+            const toast = document.getElementById("centerToast");
+            toast.innerText = message;
+            toast.classList.add("show");
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove("show");
+            }, 2500); // Toast zmizne po 2.5 sekundách
+        }
 
         function togglePinDay(day, isChecked) {
+            const nazvyDni = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
+            
             if (isChecked) {
-                pinnedDay = day; // Pripne nový deň
+                pinnedDay = day;
+                showToast(`${nazvyDni[day - 1]} zostane navrchu 📌`);
             } else {
-                pinnedDay = null; // Odopne ho, ak ho odškrtneš
+                pinnedDay = null;
+                showToast(`${nazvyDni[day - 1]} je odopnutý(á)`);
             }
             localStorage.setItem('pinnedDay', JSON.stringify(pinnedDay));
             
-            // Prekreslíme tabuľku s novým poradím a doplníme čísla
             renderGrid();
             updateAllDaySummaries(); 
         }
@@ -634,14 +677,11 @@ let pinnedDay = loadStorage('pinnedDay', null);
                 let isPinned = (pinnedDay === day);
                 let dayCell = document.createElement("div"); dayCell.className = "day-label-box";
                 dayCell.innerHTML = `
-                    <div class="day-label" style="display:flex; flex-direction:column; align-items:center; text-align:center;">
-                        <label style="font-size:0.8rem; display:flex; align-items:center; cursor:pointer; font-weight:normal; margin-bottom:4px;" title="${isPinned ? 'Odopnúť' : 'Pripnúť na vrch'}">
-                            <input type="checkbox" style="margin-right:4px; cursor:pointer;" ${isPinned ? 'checked' : ''} onchange="togglePinDay(${day}, this.checked)">
-                            📌
-                        </label>
-                        <span>${nazvyDni[day - 1]}</span>
+                    <div class="day-label" style="text-align: center; margin-bottom: 6px;">
+                        ${nazvyDni[day - 1]}
                     </div>
-                    <div class="day-action-icons" style="justify-content: center; margin-top: 4px;">
+                    <div class="day-action-icons" style="justify-content: center; align-items: center;">
+                        <input type="checkbox" title="${isPinned ? 'Odopnúť' : 'Pripnúť na vrch'}" style="cursor: pointer; width: 22px; height: 22px; margin: 0; accent-color: var(--primary);" ${isPinned ? 'checked' : ''} onchange="togglePinDay(${day}, this.checked)">
                         <button class="icon-btn-small" onclick="reloadWholeDay(${day})" title="Nové náhodné jedlá na celý deň">🔄</button>
                         <button class="icon-btn-small" onclick="addWholeDayToCart(${day})" title="Pridať celý deň do nákupu">🛒</button>
                     </div>`;
