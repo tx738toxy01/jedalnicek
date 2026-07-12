@@ -203,22 +203,23 @@
 
     <div class="header-container">
         <h1>Inteligentný Jedálniček</h1>
+        <h2 style="font-size: 1.1rem; color: var(--text-muted); font-weight: 500; margin-top: -5px; margin-bottom: 15px;">Môj cieľový denný príjem:</h2>
         
         <div class="legend-container">
             <div class="legend-input-group" title="Zmeň cieľ Kalórií">
                 🔥 <input type="number" id="goal-cal" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('cal')"> kcal
             </div>
             <div class="legend-input-group" title="Zmeň cieľ Bielkovín">
-                🥩 <input type="number" id="goal-pro" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('pro')"> g Pro
+                🥩 <input type="number" id="goal-pro" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('pro')"> g Bielkovín
             </div>
             <div class="legend-input-group" title="Zmeň cieľ Sacharidov">
-                🍞 <input type="number" id="goal-carb" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('carb')"> g Sac
+                🍞 <input type="number" id="goal-carb" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('carb')"> g Sacharidov
             </div>
             <div class="legend-input-group" title="Zmeň cieľ Tukov">
-                🥑 <input type="number" id="goal-fat" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fat')"> g Tuk
+                🥑 <input type="number" id="goal-fat" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fat')"> g Tukov
             </div>
             <div class="legend-input-group" title="Zmeň cieľ Vlákniny">
-                🌾 <input type="number" id="goal-fib" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fib')"> g Vlák
+                🌾 <input type="number" id="goal-fib" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fib')"> g Vlákniny
             </div>
         </div>
         
@@ -482,10 +483,15 @@
 
         function updateGoal(type) {
             let val = parseInt(document.getElementById(`goal-${type}`).value);
-            if (!val || val <= 0) {
-                alert("Hodnota makroživiny musí byť väčšia ako nula.");
-                document.getElementById(`goal-${type}`).value = GOALS[type];
-                return;
+            
+            // Absolútne minimá, aby algoritmus a gramáže nespadli na nezmyselné čísla
+            const MIN_VALUES = { cal: 1200, pro: 40, carb: 30, fat: 25, fib: 10 };
+            const TYPE_NAMES = { cal: "kalórií (min 1200 kcal)", pro: "bielkovín (min 40g)", carb: "sacharidov (min 30g)", fat: "tukov (min 25g)", fib: "vlákniny (min 10g)" };
+            
+            if (!val || val < MIN_VALUES[type]) {
+                alert(`⚠️ Hodnota je príliš nízka pre reálny jedálniček! Minimum pre cieľ ${TYPE_NAMES[type]} bolo automaticky nastavené, aby sa dali správne prepočítať suroviny.`);
+                val = MIN_VALUES[type];
+                document.getElementById(`goal-${type}`).value = val;
             }
 
             GOALS[type] = val;
@@ -643,22 +649,57 @@
             let query = document.getElementById("searchInput").value.toLowerCase();
             let resultsDiv = document.getElementById("searchResults");
             resultsDiv.innerHTML = "";
-            let pool = pools[currentSearchMIdx];
+            let pool = pools[currentSearchMIdx] || [];
+
+            let resultsCount = 0; // Počítadlo úspešne načítaných jedál
 
             pool.forEach((meal, idx) => {
-                let textToSearch = (meal.title + " " + meal.ing.map(i=>i.text).join(" ")).toLowerCase();
-                if (textToSearch.includes(query)) {
-                    let div = document.createElement("div"); div.className = "search-result-item";
-                    div.innerHTML = `<div class="search-result-title">${escapeHTML(meal.title)}</div>
-                                     <div class="search-result-meta">🔥 ${meal.cal || 0} kcal | 🥩 ${meal.pro || 0}g Pro | Suroviny: ${escapeHTML(meal.ing.map(i=>i.text.split(" ").slice(2).join(" ")).join(", "))}</div>`;
-                    div.onclick = () => {
-                        swapSpecificMeal(currentSearchDay, currentSearchMIdx, idx);
-                        closeModal('searchModal');
-                    };
-                    resultsDiv.appendChild(div);
+                try {
+                    // Ochrana pred chýbajúcimi dátami v data.js
+                    let mealTitle = meal.title || "Neznáme jedlo";
+                    let ingredients = Array.isArray(meal.ing) ? meal.ing : [];
+                    
+                    // Bezpečné spojenie textov pre vyhľadávanie
+                    let textToSearch = (mealTitle + " " + ingredients.map(i => i.text || "").join(" ")).toLowerCase();
+                    
+                    if (textToSearch.includes(query)) {
+                        resultsCount++;
+                        let div = document.createElement("div"); 
+                        div.className = "search-result-item";
+                        
+                        // Bezpečné vyňatie názvov surovín
+                        let shortIng = ingredients.map(i => {
+                            let text = i.text || "";
+                            let parts = text.split(" ");
+                            return parts.length >= 3 ? parts.slice(2).join(" ") : text;
+                        }).join(", ");
+
+                        if(!shortIng) shortIng = "Žiadne suroviny";
+
+                        div.innerHTML = `<div class="search-result-title">${escapeHTML(mealTitle)}</div>
+                                         <div class="search-result-meta">🔥 ${meal.cal || 0} kcal | 🥩 ${meal.pro || 0}g Pro | Suroviny: ${escapeHTML(shortIng)}</div>`;
+                        
+                        div.onclick = () => {
+                            swapSpecificMeal(currentSearchDay, currentSearchMIdx, idx);
+                            closeModal('searchModal');
+                        };
+                        resultsDiv.appendChild(div);
+                    }
+                } catch (error) {
+                    // Ak má nejaké jedlo úplne zničenú štruktúru v data.js, preskočíme ho, ale kód nespadne
+                    console.error(`Chyba pri načítaní jedla č. ${idx}:`, error);
                 }
             });
-            if (resultsDiv.innerHTML === "") resultsDiv.innerHTML = "<p style='color:var(--text-muted); font-style:italic;'>Nenašli sa žiadne jedlá vyhovujúce vyhľadávaniu.</p>";
+
+            // Vykreslenie správy podľa počtu výsledkov
+            if (resultsCount === 0) {
+                resultsDiv.innerHTML = "<p style='color:var(--text-muted); font-style:italic;'>Nenašli sa žiadne jedlá vyhovujúce vyhľadávaniu.</p>";
+            } else {
+                let countInfo = document.createElement("div");
+                countInfo.style.cssText = "font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;";
+                countInfo.innerText = `Nájdených možností: ${resultsCount}`;
+                resultsDiv.insertBefore(countInfo, resultsDiv.firstChild);
+            }
         }
 
         function updateAllDaySummaries() {
