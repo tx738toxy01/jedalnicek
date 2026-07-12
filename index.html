@@ -315,7 +315,6 @@
                         <option value="desc">Zostupne ⬆️</option>
                     </select>
                 </div>
-                </div>
             </div>
             
             <div class="cart-items-container" id="cartContent"></div>
@@ -897,15 +896,6 @@
             let displayString = item.unit ? `${+(item.qty).toFixed(1)} ${item.unit} ${item.name}` : `${item.name}`;
             let isChecked = isPurchased ? "checked" : ""; let textStyle = isPurchased ? "text-decoration: line-through; opacity: 0.5;" : "";
             return `<li style="padding:10px 0;"><label class="checkbox-wrapper"><input type="checkbox" onchange="togglePurchased('${key}', this.checked)" ${isChecked}><div class="checkmark"></div><span class="ingredient-text" style="margin-top:2px; ${textStyle}">${escapeHTML(displayString)}</span></label></li>`;
-        }
-
-        function getUnitWeight(unit) {
-            if (!unit) return 2;
-            let u = unit.toLowerCase();
-            // Najprv chceme vážené a merané suroviny (g, kg, ml, l)
-            if (['g', 'kg', 'ml', 'l', 'dkg'].includes(u)) return 1;
-            // Potom kusové a iné (ks, pl, čl, hrsť, atď.)
-            return 2;
         }
 
         function getUnitWeight(unit) {
