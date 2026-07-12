@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Môj Inteligentný Jedálniček</title>
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%2250%22 font-size=%2280%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🍽️</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23f97316%22/><text x=%2250%22 y=%2250%22 font-size=%2265%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🍽️</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23f97316%22/><text x=%2250%22 y=%2250%22 font-size=%2265%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🍽️</text></svg>">
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#f97316">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Jedálniček">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f97316">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Jedálniček">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -43,12 +44,10 @@
         .header-container { text-align: center; margin-bottom: 40px; }
         h1 { font-size: 2.5rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.03em; margin-bottom: 8px;}
         
-        /* Globálne akcie nad tabuľkou */
         .global-actions { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
         .btn-global { padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); background: white; color: var(--text-main); display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-card); }
         .btn-global:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
-        /* Interaktívna Legenda / Ciele */
         .legend-container { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; margin-top: 10px; }
         .legend-input-group {
             display: inline-flex; align-items: center; background: var(--secondary-light); padding: 8px 16px;
@@ -72,21 +71,18 @@
         .col-header.empty { border: none; }
         .col-header.summary { color: var(--primary); border-bottom-color: var(--primary-light); }
         
-        /* Bunka s názvom dňa + akcie pre celý deň */
         .day-label-box { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
         .day-label { font-weight: 700; color: var(--text-main); font-size: 1.1rem; }
         .day-action-icons { display: flex; gap: 6px; }
         .icon-btn-small { background: white; border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem; transition: 0.2s; box-shadow: var(--shadow-card); }
         .icon-btn-small:hover { border-color: var(--primary); color: var(--primary); transform: scale(1.05); }
 
-        /* Bunka jedla */
         .meal-cell { background: var(--surface); border-radius: var(--radius-sm); padding: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--shadow-card); border: 1px solid rgba(231, 229, 228, 0.6); display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; position: relative;}
         .meal-cell:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--primary-light); }
         .meal-cell-top { width: 100%; }
         .meal-cell-title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); margin-bottom: 4px; padding-right: 45px; line-height: 1.3;}
         .meal-cell-macros { font-size: 0.75rem; color: var(--text-muted); }
         
-        /* Ikonky priamo v kartičke jedla */
         .meal-cell-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; opacity: 0.3; transition: 0.2s; }
         .meal-cell:hover .meal-cell-actions { opacity: 1; }
 
@@ -94,7 +90,6 @@
         .summary-cell:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); background: #ffedd5; border-color: var(--primary); }
         .summary-title { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid var(--primary-light); padding-bottom: 5px;}
         
-        /* Inline Progress Bar */
         .macro-progress-text { position: relative; display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px; padding: 4px 8px; border-radius: 6px; background: #f5f5f4; overflow: hidden; z-index: 1; }
         .mpt-fill { position: absolute; top: 0; left: 0; height: 100%; z-index: -1; transition: width 0.5s ease; }
         .mpt-label { font-weight: 600; color: var(--text-main); }
@@ -103,7 +98,6 @@
         .meal-eaten { background-color: #dcfce7 !important; border-color: #bbf7d0 !important; }
         .meal-skipped { background-color: #fee2e2 !important; border-color: #fecaca !important; opacity: 0.7; }
         
-        /* Modálne Okná */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(41, 37, 36, 0.6); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s ease; z-index: 1000; padding: 20px; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content { background: var(--surface); width: 100%; max-width: 600px; border-radius: var(--radius-lg); padding: 40px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-modal); transform: scale(0.95) translateY(10px); transition: 0.3s ease; }
@@ -186,7 +180,6 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
 
-        /* Média Queries pre mobily */
         @media (max-width: 900px) {
             .schedule-container { padding: 0; }
             .grid-table { 
@@ -247,8 +240,7 @@
     </div>
 
     <div class="schedule-container">
-        <div class="grid-table" id="scheduleGrid">
-            </div>
+        <div class="grid-table" id="scheduleGrid"></div>
     </div>
 
     <button class="floating-cart" onclick="openCart()">
@@ -333,33 +325,93 @@
     <script src="data.js"></script>
 
     <script>
-        // --- 1. Nastavenia a Ciele ---
+        // --- 1. Bezpečné Načítanie Pamäte (Ochrana proti globálnemu pádu) ---
+        function loadStorage(key, fallback) {
+            try {
+                let data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : fallback;
+            } catch (e) {
+                console.warn(`Chyba pamäte pre ${key}, resetujem na základ.`);
+                return fallback;
+            }
+        }
+
         const BASE_GOALS = { cal: 1700, pro: 80, carb: 180, fat: 55, fib: 30 };
-        let GOALS = JSON.parse(localStorage.getItem('userGoals')) || { cal: 1700, pro: 80, carb: 180, fat: 55, fib: 30 };
+        let GOALS = loadStorage('userGoals', { cal: 1700, pro: 80, carb: 180, fat: 55, fib: 30 });
 
-        // Globálne pamäťové zoznamy (State)
-        let chosenMealsTimeline = JSON.parse(localStorage.getItem('chosenMealsTimeline')) || {}; 
-        let shoppingList = JSON.parse(localStorage.getItem('shoppingListIDs')) || [];
-        let purchasedList = JSON.parse(localStorage.getItem('purchasedKeys')) || [];
-        let mealStatuses = JSON.parse(localStorage.getItem('mealStatuses')) || {}; 
-        let customFoods = JSON.parse(localStorage.getItem('customFoods')) || {};
+        let chosenMealsTimeline = loadStorage('chosenMealsTimeline', {}); 
+        let shoppingList = loadStorage('shoppingListIDs', []);
+        let purchasedList = loadStorage('purchasedKeys', []);
+        let mealStatuses = loadStorage('mealStatuses', {}); 
+        let customFoods = loadStorage('customFoods', {});
+        let userSwaps = loadStorage('userSwaps', {});
 
-        let currentMealPlan = {}; // Objekt, v ktorom bude pripravený škálovaný plán na aktuálny týždeň
-        let pools = { 0:[], 1:[], 2:[], 3:[], 4:[] }; // Zásobníky pre 5 chodov vytiahnuté z data.js
+        let currentMealPlan = {}; 
+        let pools = { 0:[], 1:[], 2:[], 3:[], 4:[] }; 
 
-        // Spustenie aplikácie po načítaní súborov
+        // Databáza náhradných surovín
+        const SWAP_DB = {
+            'ovocie': [
+                { n: 'Jablko', c: 52, p: 0.3, s: 14, t: 0.2, v: 2.4 }, { n: 'Banán', c: 89, p: 1.1, s: 23, t: 0.3, v: 2.6 },
+                { n: 'Čučoriedky', c: 57, p: 0.7, s: 14, t: 0.3, v: 2.4 }, { n: 'Jahody', c: 32, p: 0.7, s: 8, t: 0.3, v: 2 },
+                { n: 'Maliny', c: 52, p: 1.2, s: 12, t: 0.6, v: 6.5 }, { n: 'Figy', c: 74, p: 0.8, s: 19, t: 0.3, v: 2.9 }
+            ],
+            'zelenina': [
+                { n: 'Brokolica', c: 34, p: 2.8, s: 7, t: 0.4, v: 2.6 }, { n: 'Karfiol', c: 25, p: 1.9, s: 5, t: 0.3, v: 2 },
+                { n: 'Mrkva', c: 41, p: 0.9, s: 10, t: 0.2, v: 2.8 }, { n: 'Cuketa', c: 17, p: 1.2, s: 3, t: 0.3, v: 1 },
+                { n: 'Paradajky', c: 18, p: 0.9, s: 4, t: 0.2, v: 1.2 }, { n: 'Uhorka', c: 15, p: 0.7, s: 4, t: 0.1, v: 0.5 }
+            ],
+            'hydina': [
+                { n: 'Kuracie prsia', c: 110, p: 23, s: 0, t: 1.2, v: 0 }, { n: 'Morčacie prsia', c: 114, p: 24, s: 0, t: 1.5, v: 0 }
+            ],
+            'ryby': [
+                { n: 'Losos', c: 206, p: 22, s: 0, t: 13, v: 0 }, { n: 'Tuniak', c: 130, p: 28, s: 0, t: 1, v: 0 },
+                { n: 'Treska', c: 82, p: 18, s: 0, t: 0.7, v: 0 }
+            ],
+            'ryby_udene': [
+                { n: 'Údený losos', c: 117, p: 18, s: 0, t: 4.3, v: 0 }, { n: 'Údená makrela', c: 274, p: 19, s: 0, t: 22, v: 0 },
+                { n: 'Údený pstruh', c: 138, p: 25, s: 0, t: 4, v: 0 }
+            ],
+            'prilohy': [
+                { n: 'Ryža', c: 350, p: 7, s: 78, t: 0.5, v: 1.3 }, { n: 'Zemiaky', c: 77, p: 2, s: 17, t: 0.1, v: 2.2 },
+                { n: 'Cestoviny', c: 350, p: 12, s: 71, t: 1.5, v: 3 }, { n: 'Bataty', c: 86, p: 1.6, s: 20, t: 0.1, v: 3 },
+                { n: 'Kuskus', c: 376, p: 13, s: 77, t: 0.6, v: 5 }, { n: 'Bulgur', c: 342, p: 12, s: 76, t: 1.3, v: 18 }
+            ],
+            'vlocky': [
+                { n: 'Ovsené vločky', c: 389, p: 17, s: 66, t: 7, v: 10 }, { n: 'Špaldové vločky', c: 370, p: 14, s: 68, t: 3, v: 9 }
+            ],
+            'orechy': [
+                { n: 'Vlašské orechy', c: 654, p: 15, s: 14, t: 65, v: 7 }, { n: 'Mandle', c: 579, p: 21, s: 22, t: 50, v: 12 },
+                { n: 'Kešu', c: 553, p: 18, s: 30, t: 44, v: 3.3 }, { n: 'Lieskovce', c: 628, p: 15, s: 17, t: 61, v: 10 }
+            ],
+            'mliecne_huste': [
+                { n: 'Odtučnený tvaroh', c: 68, p: 12, s: 4, t: 0.5, v: 0 }, { n: 'Grécky jogurt 0%', c: 57, p: 10, s: 4, t: 0, v: 0 },
+                { n: 'Skyr', c: 62, p: 11, s: 4, t: 0.2, v: 0 }
+            ]
+        };
+
+        // --- 2. Kontrola prítomnosti súboru s dátami ---
         if (typeof BASE_MEAL_PLAN === 'undefined') {
-            alert("Chyba: Súbor data.js nebol nájdený alebo neobsahuje dáta jedálnička!");
+            document.getElementById("scheduleGrid").innerHTML = `
+                <div style="grid-column: 1 / -1; margin: 20px 0; padding: 40px; background: #fee2e2; border: 2px dashed #ef4444; border-radius: 12px; color: #b91c1c; text-align: left; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.1);">
+                    <h2 style="margin-bottom: 15px;">⚠️ Zásadná chyba: Súbor <code>data.js</code> sa nenačítal!</h2>
+                    <p style="font-size: 1.05rem;">Aplikácia nemôže fungovať bez receptov. Ak je toto nahrané na GitHube, najčastejšie ide o tieto 2 problémy:</p>
+                    <ul style="margin-top: 15px; margin-left: 20px; font-size: 1rem; color: #7f1d1d;">
+                        <li style="margin-bottom: 10px;"><b>Preklep v názve súboru:</b> Skontroluj, či sa súbor volá presne <b>data.js</b> (všetky písmená musia byť malé). Ak sa na GitHube volá napr. <i>Data.js</i>, nebude to fungovať.</li>
+                        <li><b>Oneskorenie GitHubu:</b> Ak si súbor nahral iba pred chvíľou, GitHub Pages potrebuje pár minút na spracovanie. Počkaj chvíľu a stlač <b>Ctrl + F5</b> (Tvrdý reštart stránky).</li>
+                    </ul>
+                </div>
+            `;
         } else {
+            // Ak je všetko v poriadku, ideme na to
             buildPools();
             initApp();
         }
 
-        // Rozdelí tvojich 100 dní z Excelu na samostatné osudia pre každý chod
         function buildPools() {
             Object.keys(BASE_MEAL_PLAN).forEach(dayKey => {
                 let dayMeals = BASE_MEAL_PLAN[dayKey];
-                if (!Array.isArray(dayMeals)) return; // Ochrana voči chybám v štruktúre dát
+                if (!Array.isArray(dayMeals)) return; 
                 dayMeals.forEach((meal, mIdx) => {
                     if (mIdx <= 4) {
                         pools[mIdx].push(JSON.parse(JSON.stringify(meal)));
@@ -371,20 +423,18 @@
         function initApp() {
             setInputsFromGoals();
             
-            // OCHRANA 1: Ak je pamäť poškodená (chýba deň 1), vygenerujeme týždeň nanovo
             if (!chosenMealsTimeline || typeof chosenMealsTimeline[1] === 'undefined') {
                 chosenMealsTimeline = {};
                 generateEntireNewWeek(false); 
             }
             
-            // OCHRANA 2: Skúsime to spustiť. Ak to spadne kvôli starej pamäti, appka sa sama opraví
             try {
                 generateScaledPlan();
                 renderGrid();
                 updateAllDaySummaries();
                 saveCartData();
             } catch (err) {
-                console.error("Zistená chyba starej pamäte, aplikácia sa reštartuje...", err);
+                console.error("Zistená chyba v logike, resetujem...", err);
                 localStorage.clear();
                 location.reload();
             }
@@ -398,14 +448,14 @@
             document.getElementById("goal-fib").value = GOALS.fib;
         }
 
-        // --- 2. Logika generovania a pamäte výberu ---
+        // --- 3. Logika generovania a pamäte výberu ---
         function generateEntireNewWeek(shouldReloadPage = true) {
             chosenMealsTimeline = {};
             for (let day = 1; day <= 7; day++) {
                 chosenMealsTimeline[day] = [];
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
                     let randomIdx = Math.floor(Math.random() * pools[mIdx].length);
-                    chosenMealsTimeline[day].push(randomIdx); // Uložíme si len INDEX jedla z osudia
+                    chosenMealsTimeline[day].push(randomIdx); 
                 }
             }
             localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
@@ -418,7 +468,6 @@
             chosenMealsTimeline[day][mIdx] = newRandomIdx;
             localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
             
-            // Vymažeme statusy (ak bolo označené ako zjedené) a custom suroviny pre túto pozíciu
             delete mealStatuses[`d${day}_m${mIdx}`];
             delete customFoods[`d${day}_m${mIdx}`];
             localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
@@ -450,7 +499,6 @@
         function updateGoal(type) {
             let val = parseInt(document.getElementById(`goal-${type}`).value);
             
-            // Ochrana pred zmazaním čísla
             if (!val || val <= 0) {
                 document.getElementById(`goal-${type}`).value = GOALS[type];
                 return;
@@ -458,12 +506,10 @@
 
             GOALS[type] = val;
 
-            // Zistíme pôvodný pomer sacharidov a tukov
             let baseCarbCals = BASE_GOALS.carb * 4;
             let baseFatCals = BASE_GOALS.fat * 9;
             let flexRatio = baseCarbCals / (baseCarbCals + baseFatCals); 
 
-            // Fyzikálna kontrola: Len proteín má 4 kcal/g.
             let minCalsRequired = (GOALS.pro * 4); 
             
             if (GOALS.cal < minCalsRequired) {
@@ -471,7 +517,6 @@
                 GOALS.cal = minCalsRequired;
             }
 
-            // Výpočet kalórií, ktoré nám zostali na voľné naloženie (Sacharidy a Tuky)
             let remainingCals = GOALS.cal - (GOALS.pro * 4);
 
             if (type === 'carb') {
@@ -545,7 +590,6 @@
                     mealCopy.ing.forEach((i, iIdx) => {
                         if(!i.isCustom) {
                             
-                            // NOVÁ LOGIKA SWAPOV (Zámena surovín)
                             let swapKey = `d${day}_m${mIdx}_i${iIdx}`;
                             if (userSwaps[swapKey]) {
                                 let sd = userSwaps[swapKey];
@@ -558,7 +602,6 @@
                                 i.fib = (newQtyGrams * sd.v / 100);
                             }
 
-                            // Vylepšený, flexibilnejší REGEX na suroviny s voliteľnou medzerou
                             let match = i.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
                             let effectiveRatio = rCal; 
                             
@@ -636,31 +679,33 @@
                 `;
                 grid.appendChild(dayCell);
                 
-                currentMealPlan[day].forEach(meal => {
-                    let cell = document.createElement("div");
-                    cell.className = "meal-cell";
-                    cell.id = `cell_d${meal.day}_m${meal.mIdx}`;
-                    
-                    cell.innerHTML = `
-                        <div class="meal-cell-top" onclick="openMealModalByIDs(${meal.day}, ${meal.mIdx})">
-                            <div class="meal-cell-title">${meal.title}</div>
-                            <div class="meal-cell-macros" style="line-height: 1.5; margin-top: 4px;">
-                                🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g<br>
-                                🍞 ${meal.carb}g | 🥑 ${meal.fat}g | 🌾 ${meal.fib}g
+                if (currentMealPlan[day]) {
+                    currentMealPlan[day].forEach(meal => {
+                        let cell = document.createElement("div");
+                        cell.className = "meal-cell";
+                        cell.id = `cell_d${meal.day}_m${meal.mIdx}`;
+                        
+                        cell.innerHTML = `
+                            <div class="meal-cell-top" onclick="openMealModalByIDs(${meal.day}, ${meal.mIdx})">
+                                <div class="meal-cell-title">${meal.title}</div>
+                                <div class="meal-cell-macros" style="line-height: 1.5; margin-top: 4px;">
+                                    🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g<br>
+                                    🍞 ${meal.carb}g | 🥑 ${meal.fat}g | 🌾 ${meal.fib}g
+                                </div>
                             </div>
-                        </div>
-                        <div class="meal-cell-actions">
-                            <button class="icon-btn-small" onclick="event.stopPropagation(); reloadSingleMeal(${meal.day}, ${meal.mIdx})" title="Vymeniť iba toto jedlo">🔄</button>
-                            <button class="icon-btn-small" onclick="event.stopPropagation(); addSingleMealToCart(${meal.day}, ${meal.mIdx})" title="Pridať toto jedlo do nákupu">🛒</button>
-                        </div>
-                    `;
-                    
-                    let status = mealStatuses[`d${meal.day}_m${meal.mIdx}`];
-                    if(status === 'eaten') cell.classList.add('meal-eaten');
-                    if(status === 'skipped') cell.classList.add('meal-skipped');
-                    
-                    grid.appendChild(cell);
-                });
+                            <div class="meal-cell-actions">
+                                <button class="icon-btn-small" onclick="event.stopPropagation(); reloadSingleMeal(${meal.day}, ${meal.mIdx})" title="Vymeniť iba toto jedlo">🔄</button>
+                                <button class="icon-btn-small" onclick="event.stopPropagation(); addSingleMealToCart(${meal.day}, ${meal.mIdx})" title="Pridať toto jedlo do nákupu">🛒</button>
+                            </div>
+                        `;
+                        
+                        let status = mealStatuses[`d${meal.day}_m${meal.mIdx}`];
+                        if(status === 'eaten') cell.classList.add('meal-eaten');
+                        if(status === 'skipped') cell.classList.add('meal-skipped');
+                        
+                        grid.appendChild(cell);
+                    });
+                }
 
                 let summaryCell = document.createElement("div");
                 summaryCell.className = "summary-cell";
@@ -673,12 +718,14 @@
         function updateAllDaySummaries() {
             for (let day = 1; day <= 7; day++) {
                 let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
-                currentMealPlan[day].forEach(meal => {
-                    if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
-                        sums.cal += meal.cal; sums.pro += meal.pro; 
-                        sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
-                    }
-                });
+                if (currentMealPlan[day]) {
+                    currentMealPlan[day].forEach(meal => {
+                        if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
+                            sums.cal += meal.cal; sums.pro += meal.pro; 
+                            sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
+                        }
+                    });
+                }
 
                 let pCal = Math.min((sums.cal / GOALS.cal) * 100, 100) || 0;
                 let pPro = Math.min((sums.pro / GOALS.pro) * 100, 100) || 0;
@@ -758,7 +805,6 @@
                 let infoClass = isPurchased ? "ingredient-info purchased" : "ingredient-info";
                 let customTag = item.isCustom ? "<span style='font-size:0.7rem; background:#e7e5e4; padding:2px 6px; border-radius:4px; margin-left:5px;'>Vlastné</span>" : "";
 
-                // Vylepšený REGEX
                 let match = item.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
                 let nameOnly = match ? match[3] : item.text;
 
@@ -871,7 +917,6 @@
 
         // --- 6. Logika Inteligentného Nákupného Zoznamu ---
         function extractKeyFromText(text) {
-            // Vylepšený REGEX
             let match = text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
             let unit = "", name = text;
             if(match) { unit = match[2]; name = match[3]; }
@@ -1047,49 +1092,6 @@
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', function(e) { if(e.target === this) this.classList.remove("active"); });
         });
-
-        // --- 7. INTELIGENTNÁ VÝMENA SUROVÍN (SWAP) ---
-        let userSwaps = JSON.parse(localStorage.getItem('userSwaps')) || {};
-
-        const SWAP_DB = {
-            'ovocie': [
-                { n: 'Jablko', c: 52, p: 0.3, s: 14, t: 0.2, v: 2.4 }, { n: 'Banán', c: 89, p: 1.1, s: 23, t: 0.3, v: 2.6 },
-                { n: 'Čučoriedky', c: 57, p: 0.7, s: 14, t: 0.3, v: 2.4 }, { n: 'Jahody', c: 32, p: 0.7, s: 8, t: 0.3, v: 2 },
-                { n: 'Maliny', c: 52, p: 1.2, s: 12, t: 0.6, v: 6.5 }, { n: 'Figy', c: 74, p: 0.8, s: 19, t: 0.3, v: 2.9 }
-            ],
-            'zelenina': [
-                { n: 'Brokolica', c: 34, p: 2.8, s: 7, t: 0.4, v: 2.6 }, { n: 'Karfiol', c: 25, p: 1.9, s: 5, t: 0.3, v: 2 },
-                { n: 'Mrkva', c: 41, p: 0.9, s: 10, t: 0.2, v: 2.8 }, { n: 'Cuketa', c: 17, p: 1.2, s: 3, t: 0.3, v: 1 },
-                { n: 'Paradajky', c: 18, p: 0.9, s: 4, t: 0.2, v: 1.2 }, { n: 'Uhorka', c: 15, p: 0.7, s: 4, t: 0.1, v: 0.5 }
-            ],
-            'hydina': [
-                { n: 'Kuracie prsia', c: 110, p: 23, s: 0, t: 1.2, v: 0 }, { n: 'Morčacie prsia', c: 114, p: 24, s: 0, t: 1.5, v: 0 }
-            ],
-            'ryby': [
-                { n: 'Losos', c: 206, p: 22, s: 0, t: 13, v: 0 }, { n: 'Tuniak', c: 130, p: 28, s: 0, t: 1, v: 0 },
-                { n: 'Treska', c: 82, p: 18, s: 0, t: 0.7, v: 0 }
-            ],
-            'ryby_udene': [
-                { n: 'Údený losos', c: 117, p: 18, s: 0, t: 4.3, v: 0 }, { n: 'Údená makrela', c: 274, p: 19, s: 0, t: 22, v: 0 },
-                { n: 'Údený pstruh', c: 138, p: 25, s: 0, t: 4, v: 0 }
-            ],
-            'prilohy': [
-                { n: 'Ryža', c: 350, p: 7, s: 78, t: 0.5, v: 1.3 }, { n: 'Zemiaky', c: 77, p: 2, s: 17, t: 0.1, v: 2.2 },
-                { n: 'Cestoviny', c: 350, p: 12, s: 71, t: 1.5, v: 3 }, { n: 'Bataty', c: 86, p: 1.6, s: 20, t: 0.1, v: 3 },
-                { n: 'Kuskus', c: 376, p: 13, s: 77, t: 0.6, v: 5 }, { n: 'Bulgur', c: 342, p: 12, s: 76, t: 1.3, v: 18 }
-            ],
-            'vlocky': [
-                { n: 'Ovsené vločky', c: 389, p: 17, s: 66, t: 7, v: 10 }, { n: 'Špaldové vločky', c: 370, p: 14, s: 68, t: 3, v: 9 }
-            ],
-            'orechy': [
-                { n: 'Vlašské orechy', c: 654, p: 15, s: 14, t: 65, v: 7 }, { n: 'Mandle', c: 579, p: 21, s: 22, t: 50, v: 12 },
-                { n: 'Kešu', c: 553, p: 18, s: 30, t: 44, v: 3.3 }, { n: 'Lieskovce', c: 628, p: 15, s: 17, t: 61, v: 10 }
-            ],
-            'mliecne_huste': [
-                { n: 'Odtučnený tvaroh', c: 68, p: 12, s: 4, t: 0.5, v: 0 }, { n: 'Grécky jogurt 0%', c: 57, p: 10, s: 4, t: 0, v: 0 },
-                { n: 'Skyr', c: 62, p: 11, s: 4, t: 0.2, v: 0 }
-            ]
-        };
 
         function getSwapGroup(name) {
             let n = name.toLowerCase();
