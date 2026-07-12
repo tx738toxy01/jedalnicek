@@ -836,14 +836,24 @@
         }
 
         function getCategory(name) {
-            // Text najprv zbavíme diakritiky a dáme na malé písmená
             const lower = removeDiacritics(name.toLowerCase());
             
-            if (lower.match(/(kurac|bravc|hovadz|morc|losos|tuniak|tresk|makrel|pstruh|kapor|zubac|maso|prs|sunk|parky)/)) return '🥩 Mäso a Ryby';
-            if (lower.match(/(jogurt|mliek|syr|tvaroh|vajc|masl|skyr|kefir|mozzarella|parmezan|cottage|bielk|zltk)/)) return '🥛 Mliečne výrobky a Vajcia';
-            if (lower.match(/(jablk|cucoried|brokolic|paradajk|rukol|banan|hrusk|spenat|mrkv|kapust|malin|pomaranc|baklazan|jahod|uhork|fazul|kukuric|sampinon|hrasok|oliv|cibul|cesnak|fig|cuket|paprik|salat|zelenin|brosk|marhu|sliv|hrozn|melon)/)) return '🥦 Ovocie a Zelenina';
-            if (lower.match(/(vlock|chleb|quino|sosovic|ryz|zemiak|batat|cestovin|bulgur|kuskus|tarhon|pohank|knackebrot|tortil|cicer|hummus|krupic|muc|muka|zeml|rozok)/)) return '🍞 Prílohy a Pečivo';
-            if (lower.match(/(chia|mandl|olej|orech|arasid|lanov|tekvic|semien|kesu|lieskov|sezam|pistac|kokos|mast)/)) return '🥜 Tuky, Orechy a Semená';
+            // 🥩 Mäso a Ryby
+            if (lower.match(/(kurac|bravc|hovadz|morc|losos|tuniak|tresk|makrel|pstruh|kapor|zubac|maso|prs|sunk|parky|morske plod)/)) return '🥩 Mäso a Ryby';
+            
+            // 🥛 Mliečne výrobky a Vajcia
+            if (lower.match(/(jogurt|mliek|syr|tvaroh|vajc|masl|skyr|kefir|mozzarella|parmezan|cottage|bielk|zltk|acidofilne|encian)/)) return '🥛 Mliečne výrobky a Vajcia';
+            
+            // 🍞 Prílohy a Pečivo
+            if (lower.match(/(vlock|chleb|toast|quino|sosovic|ryz|zemiak|batat|cestovin|bulgur|kuskus|tarhon|pohank|knackebrot|tortil|cicer|hummus|krupic|muc|muka|zeml|rozok|pecivo)/)) return '🍞 Prílohy a Pečivo';
+            
+            // 🥦 Ovocie a Zelenina
+            if (lower.match(/(jablk|cucoried|brokolic|paradajk|rukol|banan|hrusk|spenat|mrkv|kapust|malin|pomaranc|baklazan|jahod|uhork|fazul|kukuric|sampinon|hrasok|oliv|cibul|cesnak|fig|cuket|paprik|salat|zelenin|brosk|marhu|sliv|hrozn|melon|nektarink|kiwi|grep|ananas|spargl|zeler)/)) return '🥦 Ovocie a Zelenina';
+            
+            // 🥜 Tuky, Orechy a Semená
+            if (lower.match(/(chia|mandl|olej|orech|arasid|lanov|tekvic|semien|kesu|lieskov|sezam|pistac|kokos|mast|pekan)/)) return '🥜 Tuky, Orechy a Semená';
+            
+            // 🍫 Ostatné (kakao, proteín, atď.)
             return '🛒 Ostatné';
         }
 
@@ -957,17 +967,23 @@
                     if (weightA !== weightB) return weightA - weightB; 
                     
                     result = itemA.qty - itemB.qty;
-                    if (result === 0) result = cleanNameA.localeCompare(cleanNameB);
+                    if (result === 0) let nameOnlyA = itemA.name.replace(/^[0-9.,\s]+/i, "").trim();
+let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
+result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase()));
                 } 
                 else if (sortMethod === "cat") {
                     let catA = getCategory(itemA.name);
                     let catB = getCategory(itemB.name);
                     
-                    if (catA === catB) result = cleanNameA.localeCompare(cleanNameB);
+                    if (catA === catB) let nameOnlyA = itemA.name.replace(/^[0-9.,\s]+/i, "").trim();
+let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
+result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase()));
                     else result = getCategoryWeight(catA) - getCategoryWeight(catB);
                 } 
                 else { 
-                    result = cleanNameA.localeCompare(cleanNameB); 
+                    let nameOnlyA = itemA.name.replace(/^[0-9.,\s]+/i, "").trim();
+let nameOnlyB = itemB.name.replace(/^[0-9.,\s]+/i, "").trim();
+result = removeDiacritics(nameOnlyA.toLowerCase()).localeCompare(removeDiacritics(nameOnlyB.toLowerCase())); 
                 }
 
                 return result * dirMultiplier;
