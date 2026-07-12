@@ -341,14 +341,24 @@
 
         function initApp() {
             setInputsFromGoals();
-            // Ak užívateľ nemá vygenerovaný týždeň v pamäti, vytvoríme nový náhodný
-            if (Object.keys(chosenMealsTimeline).length === 0) {
+            
+            // OCHRANA 1: Ak je pamäť poškodená (chýba deň 1), vygenerujeme týždeň nanovo
+            if (!chosenMealsTimeline || typeof chosenMealsTimeline[1] === 'undefined') {
+                chosenMealsTimeline = {};
                 generateEntireNewWeek(false); 
             }
-            generateScaledPlan();
-            renderGrid();
-            updateAllDaySummaries();
-            saveCartData();
+            
+            // OCHRANA 2: Skúsime to spustiť. Ak to spadne kvôli starej pamäti, appka sa sama opraví
+            try {
+                generateScaledPlan();
+                renderGrid();
+                updateAllDaySummaries();
+                saveCartData();
+            } catch (err) {
+                console.error("Zistená chyba starej pamäte, aplikácia sa reštartuje...", err);
+                localStorage.clear();
+                location.reload();
+            }
         }
 
         function setInputsFromGoals() {
@@ -853,11 +863,11 @@ function generateScaledPlan() {
 
         function getCategory(name) {
             const lower = name.toLowerCase();
-            if (lower.match(/(kurac|bravč|hovädz|morč|losos|tuniak|mäso|pŕs)/)) return '🥩 Mäso a Ryby';
+            if (lower.match(/(kurac|bravč|hovädz|morč|losos|tuniak|tresk|makrel|pstruh|kapor|zubáč|mäso|pŕs)/)) return '🥩 Mäso a Ryby';
             if (lower.match(/(jogurt|mliek|syr|tvaroh|vajc|masl|skyr|kefír|mozzarella|parmezán|cottage)/)) return '🥛 Mliečne výrobky a Vajcia';
-            if (lower.match(/(jablk|čučoried|brokolic|paradajk|rukol|banán|hrušk|špenát|mrkv|kapust|malin|pomaranč|baklažán|jahôd|uhork|fazuľ|kukuric|šampiňón|hrášok|olív|cibuľ|cesnak|zelenin)/)) return '🥦 Ovocie a Zelenina';
-            if (lower.match(/(vločk|chleb|quino|šošovic|ryž|zemiak|batat|cestovin|bulgur|tarhoň|pohánk|knäckebrot|tortil|cícer|hummus)/)) return '🍞 Prílohy a Pečivo';
-            if (lower.match(/(chia|mandl|olej|orech|arašid|ľanov|tekvic|semien)/)) return '🥜 Tuky, Orechy a Semená';
+            if (lower.match(/(jablk|čučoried|brokolic|paradajk|rukol|banán|hrušk|špenát|mrkv|kapust|malin|pomaranč|baklažán|jahôd|uhork|fazuľ|kukuric|šampiňón|hrášok|olív|cibuľ|cesnak|fig|cuket|paprik|šalát|zelenin)/)) return '🥦 Ovocie a Zelenina';
+            if (lower.match(/(vločk|chleb|quino|šošovic|ryž|zemiak|batat|cestovin|bulgur|kuskus|tarhoň|pohánk|knäckebrot|tortil|cícer|hummus)/)) return '🍞 Prílohy a Pečivo';
+            if (lower.match(/(chia|mandl|olej|orech|arašid|ľanov|tekvic|semien|kešu|lieskov)/)) return '🥜 Tuky, Orechy a Semená';
             return '🛒 Ostatné';
         }
 
