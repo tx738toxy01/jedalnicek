@@ -315,6 +315,7 @@
                         <option value="desc">Zostupne ⬆️</option>
                     </select>
                 </div>
+                </div>
             </div>
             
             <div class="cart-items-container" id="cartContent"></div>
@@ -907,6 +908,24 @@
             return 2;
         }
 
+        function getUnitWeight(unit) {
+            if (!unit) return 2;
+            let u = unit.toLowerCase();
+            // Najprv chceme vážené a merané suroviny (g, kg, ml, l), potom kusové
+            if (['g', 'kg', 'ml', 'l', 'dkg'].includes(u)) return 1;
+            return 2;
+        }
+
+        function getCategoryWeight(cat) {
+            // Tvoje vlastné poradie kategórií
+            if (cat === '🥩 Mäso a Ryby') return 1;
+            if (cat === '🥛 Mliečne výrobky a Vajcia') return 2;
+            if (cat === '🍞 Prílohy a Pečivo') return 3;
+            if (cat === '🥦 Ovocie a Zelenina') return 4;
+            if (cat === '🥜 Tuky, Orechy a Semená') return 5;
+            return 6; // Ostatné
+        }
+
         function openCart() {
             let cartContent = document.getElementById("cartContent"); 
             let aggregated = getAggregatedCart(); 
@@ -920,7 +939,7 @@
             
             let sortMethod = document.getElementById("cartSort").value; 
             let sortDir = document.getElementById("cartSortDir").value; 
-            let dirMultiplier = sortDir === "desc" ? -1 : 1; // Násobič pre otočenie smeru
+            let dirMultiplier = sortDir === "desc" ? -1 : 1; 
 
             let unpurchased = keys.filter(k => !purchasedList.includes(k)); 
             let purchased = keys.filter(k => purchasedList.includes(k));
@@ -934,22 +953,20 @@
                     let weightA = getUnitWeight(itemA.unit);
                     let weightB = getUnitWeight(itemB.unit);
                     
-                    // Bez ohľadu na smer (asc/desc), vždy chceme najprv Gramy/Ml, až potom Kusy
+                    // Najprv radíme gramy, potom kusy (ignorujeme smer, gramy sú vždy prvé)
                     if (weightA !== weightB) return weightA - weightB; 
                     
-                    // Ak sú obe gramy (alebo obe kusy), radíme podľa čísla
                     result = itemA.qty - itemB.qty;
-                    // Ak je číslo rovnaké, radíme abecedne podľa názvu
                     if (result === 0) result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk');
                 } 
                 else if (sortMethod === "cat") {
                     let catA = getCategory(itemA.name);
                     let catB = getCategory(itemB.name);
+                    
                     if (catA === catB) result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk');
-                    else result = catA.localeCompare(catB, 'sk');
+                    else result = getCategoryWeight(catA) - getCategoryWeight(catB);
                 } 
                 else { 
-                    // Podľa názvu (rešpektujeme slovenskú abecedu a orezávame medzery)
                     result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk'); 
                 }
 
@@ -969,8 +986,8 @@
                     categories[cat].push(k); 
                 });
                 
-                // Samotné nadpisy kategórií tiež rešpektujú Vzostupne/Zostupne
-                Object.keys(categories).sort((a,b) => a.localeCompare(b, 'sk') * dirMultiplier).forEach(cat => {
+                // Zoraďovanie blokov kategórií podľa tvojej logiky
+                Object.keys(categories).sort((a,b) => (getCategoryWeight(a) - getCategoryWeight(b)) * dirMultiplier).forEach(cat => {
                     listHTML += `<h4 style="margin-top:15px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-main); font-size: 0.95rem;">${cat}</h4><ul class='ingredients' style='margin-bottom:0;'>`;
                     categories[cat].forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false)); 
                     listHTML += `</ul>`;
