@@ -44,9 +44,11 @@
         .header-container { text-align: center; margin-bottom: 20px; }
         h1 { font-size: 2.5rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.03em; margin-bottom: 8px;}
         
-        .global-actions { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
-        .btn-global { padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); background: white; color: var(--text-main); display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-card); }
+        .global-actions { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .btn-global { padding: 12px 24px; border-radius: 25px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); background: white; color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: var(--shadow-card); max-width: 450px; width: 100%;}
         .btn-global:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+        .btn-global.btn-highlight { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+        .btn-global.btn-highlight:hover { background: var(--primary); color: white; }
 
         .legend-container { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; margin-top: 10px; }
         .legend-input-group {
@@ -62,8 +64,7 @@
         }
         .legend-input::-webkit-outer-spin-button, .legend-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .legend-input-group:focus-within .legend-input { border-bottom-color: var(--primary); cursor: text;}
-        .legend-hint { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; font-style: italic;}
-
+        
         .schedule-container { max-width: 1450px; margin: 0 auto; overflow-x: auto; padding-bottom: 20px;}
         .grid-table { display: grid; grid-template-columns: 100px repeat(5, minmax(210px, 1fr)) minmax(250px, 1fr); gap: 15px; min-width: 1300px; }
         
@@ -74,16 +75,16 @@
         .day-label-box { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
         .day-label { font-weight: 700; color: var(--text-main); font-size: 1.1rem; }
         .day-action-icons { display: flex; gap: 6px; }
-        .icon-btn-small { background: white; border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem; transition: 0.2s; box-shadow: var(--shadow-card); }
+        .icon-btn-small { background: white; border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.85rem; transition: 0.2s; box-shadow: var(--shadow-card); color: var(--text-main); }
         .icon-btn-small:hover { border-color: var(--primary); color: var(--primary); transform: scale(1.05); }
 
-        .meal-cell { background: var(--surface); border-radius: var(--radius-sm); padding: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--shadow-card); border: 1px solid rgba(231, 229, 228, 0.6); display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; position: relative;}
+        .meal-cell { background: var(--surface); border-radius: var(--radius-sm); padding: 16px; padding-bottom: 48px; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--shadow-card); border: 1px solid rgba(231, 229, 228, 0.6); display: flex; flex-direction: column; justify-content: flex-start; min-height: 130px; position: relative;}
         .meal-cell:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--primary-light); }
         .meal-cell-top { width: 100%; }
-        .meal-cell-title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); margin-bottom: 4px; padding-right: 45px; line-height: 1.3;}
+        .meal-cell-title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); margin-bottom: 4px; line-height: 1.3;}
         .meal-cell-macros { font-size: 0.75rem; color: var(--text-muted); }
         
-        .meal-cell-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; opacity: 0.3; transition: 0.2s; }
+        .meal-cell-actions { position: absolute; bottom: 12px; right: 12px; display: flex; gap: 4px; opacity: 0.3; transition: 0.2s; z-index: 2;}
         .meal-cell:hover .meal-cell-actions { opacity: 1; }
 
         .summary-cell { background: linear-gradient(145deg, #fff7ed, #fffefc); border: 2px dashed var(--primary-light); border-radius: var(--radius-sm); padding: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--shadow-card); }
@@ -109,6 +110,7 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 25px; min-height: 50px; }
         .modal-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin: 0; line-height: 1.2; flex: 1; }
         .modal-header-actions { display: flex; align-items: center; gap: 10px; margin-left: 20px; }
+        
         .macros { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
         .macro-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 4px; }
         .bg-cal { background: var(--primary-light); color: #c2410c; }
@@ -124,9 +126,6 @@
         .btn-skipped { background: #f5f5f4; color: #ef4444; }
         .btn-skipped.active { background: #ef4444; color: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
         
-        .btn-cart-action { width: 100%; padding: 12px; background: #fff7ed; color: var(--primary); border: 1px dashed var(--primary); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px;}
-        .btn-cart-action:hover { background: var(--primary-light); }
-
         h3 { font-size: 1.1rem; font-weight: 600; margin: 30px 0 15px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center;}
         
         ul.ingredients { list-style: none; margin-bottom: 20px;}
@@ -141,16 +140,15 @@
         .ingredient-info { flex: 1; transition: 0.2s; }
         .ingredient-text { color: var(--text-main); font-weight: 500; font-size: 0.95rem; display: block; line-height: 1.3;}
         .ingredient-macro-detail { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;}
-        
         .ingredient-info.purchased { opacity: 0.5; text-decoration: line-through; }
         
         .custom-food-container { background: #fafaf9; border: 1px dashed #d6d3d1; border-radius: var(--radius-sm); padding: 20px; margin-top: 20px; }
         .cf-title { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 15px;}
         .cf-input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;}
-        .cf-input { padding: 10px 12px; border: 1px solid #d6d3d1; border-radius: 8px; font-size: 0.9rem; outline: none; width: 100%; background: white; }
-        .cf-input:focus { border-color: var(--primary); }
+        .cf-input { padding: 12px; border: 1px solid #d6d3d1; border-radius: 8px; font-size: 0.95rem; outline: none; width: 100%; background: white; transition: 0.2s;}
+        .cf-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
         .cf-macro-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-        .cf-macro-input { text-align: center; }
+        .cf-macro-input { text-align: center; padding: 10px; font-size: 0.85rem;}
         .btn-add-custom { background: var(--text-main); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%;}
         .btn-add-custom:hover { background: #000; }
 
@@ -182,32 +180,23 @@
 
         @media (max-width: 900px) {
             .schedule-container { padding: 0; }
-            .grid-table { 
-                display: flex; 
-                flex-direction: column; 
-                min-width: auto; 
-            }
+            .grid-table { display: flex; flex-direction: column; min-width: auto; }
             .col-header { display: none; }
             .day-label-box {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                background: var(--surface);
-                padding: 15px;
-                border-radius: var(--radius-sm);
-                margin-top: 20px;
-                border: 1px solid var(--border);
-            }
-            .meal-cell-top { padding-right: 0; }
-            .meal-cell-actions { 
-                position: relative; 
-                opacity: 1; 
-                justify-content: flex-end; 
-                margin-top: 10px; 
-                right: 0; 
-                top: 0;
+                flex-direction: row; justify-content: space-between; align-items: center;
+                background: var(--surface); padding: 15px; border-radius: var(--radius-sm);
+                margin-top: 20px; border: 1px solid var(--border);
             }
         }
+        
+        /* Search result items */
+        .search-result-item {
+            padding: 12px 15px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            margin-bottom: 10px; cursor: pointer; transition: 0.2s; background: white;
+        }
+        .search-result-item:hover { border-color: var(--primary); background: var(--primary-light); transform: translateX(5px); }
+        .search-result-title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); }
+        .search-result-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -235,6 +224,7 @@
         
         <div class="global-actions" style="margin-top: 20px;">
             <button class="btn-global" onclick="generateEntireNewWeek()">🔄 Vygenerovať nový náhodný týždeň</button>
+            <button class="btn-global btn-highlight" onclick="addWholeWeekToCart()">🛒 Pridať úplne všetky jedlá z celého týždňa do košíka</button>
         </div>
     </div>
 
@@ -251,10 +241,6 @@
             <button class="close-btn" onclick="closeModal('mealModal')">✕</button>
             <div class="modal-header">
                 <h2 id="mTitle">Názov jedla</h2>
-                <div style="display: flex; gap: 8px; margin-left: auto; padding-right: 40px;">
-                    <button class="icon-btn-small" id="mModalReload" title="Vymeniť toto jedlo za iné náhodné">🔄</button>
-                    <button class="icon-btn-small" id="mModalCart" title="Pridať toto jedlo do nákupu">🛒</button>
-                </div>
             </div>
             <div class="macros" id="mMacros"></div>
             
@@ -286,6 +272,18 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="searchModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('searchModal')">✕</button>
+            <div class="modal-header" style="margin-bottom: 15px;">
+                <h2 style="font-size: 1.3rem;">Vyhľadať konkrétne jedlo</h2>
+            </div>
+            <input type="text" id="searchInput" class="cf-input" placeholder="Začni písať názov (napr. Vločky) alebo surovinu (napr. tvaroh)..." onkeyup="filterMeals()" autocomplete="off">
+            <div id="searchResults" style="margin-top: 20px; max-height: 450px; overflow-y: auto; padding-right: 5px;">
+                </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="summaryModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal('summaryModal')">✕</button>
@@ -308,13 +306,11 @@
                 <div class="modal-header-actions">
                     <select id="cartSort" class="select-sort" onchange="openCart()">
                         <option value="name">Podľa názvu</option>
-                        <option value="qty">Podľa gramov</option>
+                        <option value="qty">Podľa množstva</option>
                         <option value="cat">Podľa kategórie</option>
                     </select>
                 </div>
             </div>
-            
-            <button class="btn-cart-action" style="margin-bottom: 20px; background: var(--primary); color: white; border: none;" onclick="addWholeWeekToCart()">🛒 Pridať úplne všetky jedlá z celého týždňa</button>
             
             <div class="cart-items-container" id="cartContent"></div>
             <button class="btn-danger" onclick="clearCart()">Vymazať zoznam a začať odznova</button>
@@ -324,7 +320,15 @@
     <script src="data.js"></script>
 
     <script>
-        // --- 1. Bezpečné Načítanie Pamäte (Ochrana proti globálnemu pádu) ---
+        // Ochrana voči XSS
+        function escapeHTML(str) {
+            if (!str) return "";
+            return str.toString().replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag] || tag));
+        }
+
+        // Pamäť
         function loadStorage(key, fallback) {
             try {
                 let data = localStorage.getItem(key);
@@ -347,8 +351,11 @@
 
         let currentMealPlan = {}; 
         let pools = { 0:[], 1:[], 2:[], 3:[], 4:[] }; 
+        
+        let currentSearchDay = 1;
+        let currentSearchMIdx = 0;
 
-        // Databáza náhradných surovín
+        // DB Nahrad
         const SWAP_DB = {
             'ovocie': [
                 { n: 'Jablko', c: 52, p: 0.3, s: 14, t: 0.2, v: 2.4 }, { n: 'Banán', c: 89, p: 1.1, s: 23, t: 0.3, v: 2.6 },
@@ -389,20 +396,13 @@
             ]
         };
 
-        // --- 2. Kontrola prítomnosti súboru s dátami ---
         if (typeof BASE_MEAL_PLAN === 'undefined') {
             document.getElementById("scheduleGrid").innerHTML = `
-                <div style="grid-column: 1 / -1; margin: 20px 0; padding: 40px; background: #fee2e2; border: 2px dashed #ef4444; border-radius: 12px; color: #b91c1c; text-align: left; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.1);">
-                    <h2 style="margin-bottom: 15px;">⚠️ Zásadná chyba: Súbor <code>data.js</code> sa nenačítal!</h2>
-                    <p style="font-size: 1.05rem;">Aplikácia nemôže fungovať bez receptov. Ak je toto nahrané na GitHube, najčastejšie ide o tieto 2 problémy:</p>
-                    <ul style="margin-top: 15px; margin-left: 20px; font-size: 1rem; color: #7f1d1d;">
-                        <li style="margin-bottom: 10px;"><b>Preklep v názve súboru:</b> Skontroluj, či sa súbor volá presne <b>data.js</b> (všetky písmená musia byť malé). Ak sa na GitHube volá napr. <i>Data.js</i>, nebude to fungovať.</li>
-                        <li><b>Oneskorenie GitHubu:</b> Ak si súbor nahral iba pred chvíľou, GitHub Pages potrebuje pár minút na spracovanie. Počkaj chvíľu a stlač <b>Ctrl + F5</b> (Tvrdý reštart stránky).</li>
-                    </ul>
+                <div style="grid-column: 1 / -1; margin: 20px 0; padding: 40px; background: #fee2e2; border: 2px dashed #ef4444; border-radius: 12px; color: #b91c1c; text-align: left;">
+                    <h2>⚠️ Chyba: Súbor <code>data.js</code> sa nenačítal!</h2>
                 </div>
             `;
         } else {
-            // Ak je všetko v poriadku, ideme na to
             buildPools();
             initApp();
         }
@@ -412,31 +412,19 @@
                 let dayMeals = BASE_MEAL_PLAN[dayKey];
                 if (!Array.isArray(dayMeals)) return; 
                 dayMeals.forEach((meal, mIdx) => {
-                    if (mIdx <= 4) {
-                        pools[mIdx].push(JSON.parse(JSON.stringify(meal)));
-                    }
+                    if (mIdx <= 4) pools[mIdx].push(JSON.parse(JSON.stringify(meal)));
                 });
             });
         }
 
         function initApp() {
             setInputsFromGoals();
-            
             if (!chosenMealsTimeline || typeof chosenMealsTimeline[1] === 'undefined') {
                 chosenMealsTimeline = {};
                 generateEntireNewWeek(false); 
             }
-            
-            try {
-                generateScaledPlan();
-                renderGrid();
-                updateAllDaySummaries();
-                saveCartData();
-            } catch (err) {
-                console.error("Zistená chyba v logike, resetujem...", err);
-                localStorage.clear();
-                location.reload();
-            }
+            try { generateScaledPlan(); renderGrid(); updateAllDaySummaries(); saveCartData(); } 
+            catch (err) { console.error("Chyba:", err); localStorage.clear(); location.reload(); }
         }
 
         function setInputsFromGoals() {
@@ -447,26 +435,21 @@
             document.getElementById("goal-fib").value = GOALS.fib;
         }
 
-        // --- 3. Logika generovania a pamäte výberu ---
         function generateEntireNewWeek(shouldReloadPage = true) {
             chosenMealsTimeline = {};
             for (let day = 1; day <= 7; day++) {
                 chosenMealsTimeline[day] = [];
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
-                    let randomIdx = Math.floor(Math.random() * pools[mIdx].length);
-                    chosenMealsTimeline[day].push(randomIdx); 
+                    chosenMealsTimeline[day].push(Math.floor(Math.random() * pools[mIdx].length)); 
                 }
             }
             localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
             if (shouldReloadPage) location.reload();
         }
 
-        function reloadSingleMeal(day, mIdx, shouldAlert = false) {
-            let currentPool = pools[mIdx];
-            let newRandomIdx = Math.floor(Math.random() * currentPool.length);
-            chosenMealsTimeline[day][mIdx] = newRandomIdx;
+        function swapSpecificMeal(day, mIdx, poolIdx) {
+            chosenMealsTimeline[day][mIdx] = poolIdx;
             localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
-            
             delete mealStatuses[`d${day}_m${mIdx}`];
             delete customFoods[`d${day}_m${mIdx}`];
             localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
@@ -475,102 +458,79 @@
             generateScaledPlan();
             renderGrid();
             updateAllDaySummaries();
+        }
+
+        function reloadSingleMeal(day, mIdx, shouldAlert = false) {
+            let currentPool = pools[mIdx];
+            swapSpecificMeal(day, mIdx, Math.floor(Math.random() * currentPool.length));
             if(shouldAlert) alert("Jedlo bolo nahradené iným náhodným chodom.");
         }
 
         function reloadWholeDay(day) {
             if(confirm(`Chceš vygenerovať úplne nové náhodné jedlá pre celý tento deň?`)) {
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
-                    let currentPool = pools[mIdx];
-                    chosenMealsTimeline[day][mIdx] = Math.floor(Math.random() * currentPool.length);
+                    chosenMealsTimeline[day][mIdx] = Math.floor(Math.random() * pools[mIdx].length);
                     delete mealStatuses[`d${day}_m${mIdx}`];
                     delete customFoods[`d${day}_m${mIdx}`];
                 }
                 localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
                 localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
                 localStorage.setItem('customFoods', JSON.stringify(customFoods));
-                generateScaledPlan();
-                renderGrid();
-                updateAllDaySummaries();
+                generateScaledPlan(); renderGrid(); updateAllDaySummaries();
             }
         }
 
         function updateGoal(type) {
             let val = parseInt(document.getElementById(`goal-${type}`).value);
-            
             if (!val || val <= 0) {
+                alert("Hodnota makroživiny musí byť väčšia ako nula.");
                 document.getElementById(`goal-${type}`).value = GOALS[type];
                 return;
             }
 
             GOALS[type] = val;
-
             let baseCarbCals = BASE_GOALS.carb * 4;
             let baseFatCals = BASE_GOALS.fat * 9;
             let flexRatio = baseCarbCals / (baseCarbCals + baseFatCals); 
-
             let minCalsRequired = (GOALS.pro * 4); 
             
             if (GOALS.cal < minCalsRequired) {
-                alert(`Fyziku neoklameš! Len samotné bielkoviny (${GOALS.pro}g) obsahujú ${minCalsRequired} kcal. Nastavujem kalórie na minimum.`);
+                alert(`Telo potrebuje aspoň ${minCalsRequired} kcal pre ${GOALS.pro}g bielkovín. Nastavujem kalórie.`);
                 GOALS.cal = minCalsRequired;
             }
-
             let remainingCals = GOALS.cal - (GOALS.pro * 4);
 
             if (type === 'carb') {
                 remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.carb * 4);
-                if (remainingCals < 0) {
-                    GOALS.cal = (GOALS.pro * 4) + (GOALS.carb * 4);
-                    GOALS.fat = 0;
-                } else {
-                    GOALS.fat = Math.round(remainingCals / 9);
-                }
+                if (remainingCals < 0) { GOALS.cal = (GOALS.pro * 4) + (GOALS.carb * 4); GOALS.fat = 0; } 
+                else GOALS.fat = Math.round(remainingCals / 9);
             } else if (type === 'fat') {
                 remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.fat * 9);
-                if (remainingCals < 0) {
-                    GOALS.cal = (GOALS.pro * 4) + (GOALS.fat * 9);
-                    GOALS.carb = 0;
-                } else {
-                    GOALS.carb = Math.round(remainingCals / 4);
-                }
+                if (remainingCals < 0) { GOALS.cal = (GOALS.pro * 4) + (GOALS.fat * 9); GOALS.carb = 0; } 
+                else GOALS.carb = Math.round(remainingCals / 4);
             } else if (type === 'cal' || type === 'pro') {
                 let newCarbCals = remainingCals * flexRatio;
                 let newFatCals = remainingCals * (1 - flexRatio);
-                
                 GOALS.carb = Math.round(newCarbCals / 4);
                 GOALS.fat = Math.round(newFatCals / 9);
             }
 
             setInputsFromGoals();
             localStorage.setItem('userGoals', JSON.stringify(GOALS));
-            
-            generateScaledPlan();
-            renderGrid();
-            updateAllDaySummaries();
-            
-            let modal = document.getElementById("mealModal");
-            if(modal && modal.classList.contains("active")) {
-                openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
-            }
+            generateScaledPlan(); renderGrid(); updateAllDaySummaries();
         }
 
         function generateScaledPlan() {
             currentMealPlan = {};
-            
             let rPro = GOALS.pro / BASE_GOALS.pro || 1;
             let rCarb = GOALS.carb / BASE_GOALS.carb || 1;
             let rFat = GOALS.fat / BASE_GOALS.fat || 1;
-            let rFib = GOALS.fib / BASE_GOALS.fib || 1;
             let rCal = GOALS.cal / BASE_GOALS.cal || 1;
 
             for (let day = 1; day <= 7; day++) {
                 currentMealPlan[day] = [];
-                
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
-                    let poolIdx = chosenMealsTimeline[day][mIdx];
-                    if(poolIdx === undefined) poolIdx = 0; 
-                    
+                    let poolIdx = chosenMealsTimeline[day][mIdx] || 0;
                     let mealBlueprint = pools[mIdx][poolIdx];
                     if(!mealBlueprint) continue;
 
@@ -578,80 +538,46 @@
                     mealCopy.day = day; mealCopy.mIdx = mIdx;
                     
                     let cID = `d${day}_m${mIdx}`;
-                    if (customFoods[cID]) {
-                        let cfCopy = JSON.parse(JSON.stringify(customFoods[cID]));
-                        cfCopy.forEach(cf => { cf.isCustom = true; });
-                        mealCopy.ing = mealCopy.ing.concat(cfCopy);
-                    }
+                    if (customFoods[cID]) mealCopy.ing = mealCopy.ing.concat(JSON.parse(JSON.stringify(customFoods[cID])).map(c=>({encode:true, isCustom:true, ...c})));
 
                     mealCopy.cal = 0; mealCopy.pro = 0; mealCopy.carb = 0; mealCopy.fat = 0; mealCopy.fib = 0;
 
                     mealCopy.ing.forEach((i, iIdx) => {
                         if(!i.isCustom) {
-                            
                             let swapKey = `d${day}_m${mIdx}_i${iIdx}`;
                             if (userSwaps[swapKey]) {
                                 let sd = userSwaps[swapKey];
                                 let newQtyGrams = i.cal > 0 ? (i.cal / sd.c) * 100 : 100; 
-                                
                                 i.text = `${newQtyGrams.toFixed(1)} g ${sd.n}`;
-                                i.pro = (newQtyGrams * sd.p / 100);
-                                i.carb = (newQtyGrams * sd.s / 100);
-                                i.fat = (newQtyGrams * sd.t / 100);
-                                i.fib = (newQtyGrams * sd.v / 100);
+                                i.pro = (newQtyGrams * sd.p / 100); i.carb = (newQtyGrams * sd.s / 100);
+                                i.fat = (newQtyGrams * sd.t / 100); i.fib = (newQtyGrams * sd.v / 100);
                             }
-
-                            let match = i.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                            let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
                             let effectiveRatio = rCal; 
                             
                             if(match) {
                                 let qty = parseFloat(match[1].replace(',', '.'));
-                                let unit = match[2];
-                                let name = match[3];
+                                let unit = match[2]; let name = match[3];
                                 let cat = getCategory(name);
-                                
-                                let specificRatio = rCal;
-                                if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') specificRatio = rPro;
-                                else if (cat === '🍞 Prílohy a Pečivo') specificRatio = rCarb;
-                                else if (cat === '🥜 Tuky, Orechy a Semená') specificRatio = rFat;
-                                else if (cat === '🥦 Ovocie a Zelenina') specificRatio = rFib;
+                                let specificRatio = (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') ? rPro : (cat === '🍞 Prílohy a Pečivo' ? rCarb : (cat === '🥜 Tuky, Orechy a Semená' ? rFat : rCal));
 
-                                let finalQty = qty * specificRatio;
-                                let lowerUnit = unit.toLowerCase();
-
-                                if (lowerUnit === 'ks') {
-                                    finalQty = Math.round(finalQty);
-                                    if (finalQty === 0 && qty > 0) finalQty = 1;
-                                } else if (lowerUnit === 'g' || lowerUnit === 'ml') {
-                                    finalQty = Math.round(finalQty);
-                                } else if (lowerUnit === 'čl' || lowerUnit === 'pl' || lowerUnit === 'hrsť') {
-                                    finalQty = Math.round(finalQty * 2) / 2;
-                                    if (finalQty === 0 && qty > 0) finalQty = 0.5;
-                                } else {
-                                    finalQty = +(finalQty).toFixed(1);
-                                }
-
+                                let finalQty = Math.round(qty * specificRatio * 2) / 2;
+                                if(finalQty===0 && qty>0) finalQty = 0.5;
                                 effectiveRatio = qty > 0 ? (finalQty / qty) : 1;
                                 i.text = `${finalQty} ${unit} ${name}`;
                             }
-                            
-                            i.cal = Math.round(i.cal * effectiveRatio);
-                            i.pro = Math.round(i.pro * effectiveRatio);
-                            i.carb = Math.round(i.carb * effectiveRatio);
-                            i.fat = Math.round(i.fat * effectiveRatio);
+                            i.cal = Math.round(i.cal * effectiveRatio); i.pro = Math.round(i.pro * effectiveRatio);
+                            i.carb = Math.round(i.carb * effectiveRatio); i.fat = Math.round(i.fat * effectiveRatio);
                             i.fib = Math.round(i.fib * effectiveRatio);
                         }
-                        
-                        mealCopy.cal += i.cal; mealCopy.pro += i.pro; mealCopy.carb += i.carb; 
-                        mealCopy.fat += i.fat; mealCopy.fib += i.fib;
+                        mealCopy.cal += i.cal; mealCopy.pro += i.pro; mealCopy.carb += i.carb; mealCopy.fat += i.fat; mealCopy.fib += i.fib;
                     });
-                    
                     currentMealPlan[day].push(mealCopy);
                 }
             }
         }
 
-        // --- 4. Vykresľovanie Rozhrania (Grid UI) ---
+        // Render Grid
         function renderGrid() {
             const grid = document.getElementById("scheduleGrid");
             grid.innerHTML = `
@@ -663,55 +589,76 @@
                 <div class="col-header">Večera</div>
                 <div class="col-header summary">Denný súčet 📊</div>
             `;
-            
             const nazvyDni = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
             
             for (let day = 1; day <= 7; day++) {
-                let dayCell = document.createElement("div");
-                dayCell.className = "day-label-box";
-                dayCell.innerHTML = `
-                    <div class="day-label">${nazvyDni[day - 1]}</div>
+                let dayCell = document.createElement("div"); dayCell.className = "day-label-box";
+                dayCell.innerHTML = `<div class="day-label">${nazvyDni[day - 1]}</div>
                     <div class="day-action-icons">
-                        <button class="icon-btn-small" onclick="reloadWholeDay(${day})" title="Vygenerovať iné náhodné jedlá na celý tento deň">🔄</button>
-                        <button class="icon-btn-small" onclick="addWholeDayToCart(${day})" title="Pridať celý tento deň do nákupu">🛒</button>
-                    </div>
-                `;
+                        <button class="icon-btn-small" onclick="reloadWholeDay(${day})" title="Nové náhodné jedlá na celý deň">🔄</button>
+                        <button class="icon-btn-small" onclick="addWholeDayToCart(${day})" title="Pridať celý deň do nákupu">🛒</button>
+                    </div>`;
                 grid.appendChild(dayCell);
                 
                 if (currentMealPlan[day]) {
                     currentMealPlan[day].forEach(meal => {
-                        let cell = document.createElement("div");
-                        cell.className = "meal-cell";
-                        cell.id = `cell_d${meal.day}_m${meal.mIdx}`;
-                        
+                        let cell = document.createElement("div"); cell.className = "meal-cell"; cell.id = `cell_d${meal.day}_m${meal.mIdx}`;
                         cell.innerHTML = `
                             <div class="meal-cell-top" onclick="openMealModalByIDs(${meal.day}, ${meal.mIdx})">
-                                <div class="meal-cell-title">${meal.title}</div>
+                                <div class="meal-cell-title">${escapeHTML(meal.title)}</div>
                                 <div class="meal-cell-macros" style="line-height: 1.5; margin-top: 4px;">
                                     🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g<br>
                                     🍞 ${meal.carb}g | 🥑 ${meal.fat}g | 🌾 ${meal.fib}g
                                 </div>
                             </div>
                             <div class="meal-cell-actions">
-                                <button class="icon-btn-small" onclick="event.stopPropagation(); reloadSingleMeal(${meal.day}, ${meal.mIdx})" title="Vymeniť iba toto jedlo">🔄</button>
-                                <button class="icon-btn-small" onclick="event.stopPropagation(); addSingleMealToCart(${meal.day}, ${meal.mIdx})" title="Pridať toto jedlo do nákupu">🛒</button>
+                                <button class="icon-btn-small" onclick="event.stopPropagation(); openSearchModal(${meal.day}, ${meal.mIdx})" title="Vyhľadať konkrétne jedlo">🔍</button>
+                                <button class="icon-btn-small" onclick="event.stopPropagation(); reloadSingleMeal(${meal.day}, ${meal.mIdx})" title="Vymeniť za náhodné jedlo">🔄</button>
+                                <button class="icon-btn-small" onclick="event.stopPropagation(); addSingleMealToCart(${meal.day}, ${meal.mIdx})" title="Pridať jedlo do nákupu">🛒</button>
                             </div>
                         `;
-                        
                         let status = mealStatuses[`d${meal.day}_m${meal.mIdx}`];
                         if(status === 'eaten') cell.classList.add('meal-eaten');
                         if(status === 'skipped') cell.classList.add('meal-skipped');
-                        
                         grid.appendChild(cell);
                     });
                 }
 
-                let summaryCell = document.createElement("div");
-                summaryCell.className = "summary-cell";
-                summaryCell.id = `summary_d${day}`;
-                summaryCell.onclick = () => openSummaryModal(day);
+                let summaryCell = document.createElement("div"); summaryCell.className = "summary-cell";
+                summaryCell.id = `summary_d${day}`; summaryCell.onclick = () => openSummaryModal(day);
                 grid.appendChild(summaryCell);
             }
+        }
+
+        // Vyhľadávanie
+        function openSearchModal(day, mIdx) {
+            currentSearchDay = day; currentSearchMIdx = mIdx;
+            document.getElementById("searchInput").value = "";
+            filterMeals();
+            document.getElementById("searchModal").classList.add("active");
+            setTimeout(() => document.getElementById("searchInput").focus(), 100);
+        }
+
+        function filterMeals() {
+            let query = document.getElementById("searchInput").value.toLowerCase();
+            let resultsDiv = document.getElementById("searchResults");
+            resultsDiv.innerHTML = "";
+            let pool = pools[currentSearchMIdx];
+
+            pool.forEach((meal, idx) => {
+                let textToSearch = (meal.title + " " + meal.ing.map(i=>i.text).join(" ")).toLowerCase();
+                if (textToSearch.includes(query)) {
+                    let div = document.createElement("div"); div.className = "search-result-item";
+                    div.innerHTML = `<div class="search-result-title">${escapeHTML(meal.title)}</div>
+                                     <div class="search-result-meta">🔥 ${meal.cal || 0} kcal | 🥩 ${meal.pro || 0}g Pro | Suroviny: ${escapeHTML(meal.ing.map(i=>i.text.split(" ").slice(2).join(" ")).join(", "))}</div>`;
+                    div.onclick = () => {
+                        swapSpecificMeal(currentSearchDay, currentSearchMIdx, idx);
+                        closeModal('searchModal');
+                    };
+                    resultsDiv.appendChild(div);
+                }
+            });
+            if (resultsDiv.innerHTML === "") resultsDiv.innerHTML = "<p style='color:var(--text-muted); font-style:italic;'>Nenašli sa žiadne jedlá vyhovujúce vyhľadávaniu.</p>";
         }
 
         function updateAllDaySummaries() {
@@ -720,108 +667,59 @@
                 if (currentMealPlan[day]) {
                     currentMealPlan[day].forEach(meal => {
                         if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
-                            sums.cal += meal.cal; sums.pro += meal.pro; 
-                            sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
+                            sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
                         }
                     });
                 }
-
-                let pCal = Math.min((sums.cal / GOALS.cal) * 100, 100) || 0;
-                let pPro = Math.min((sums.pro / GOALS.pro) * 100, 100) || 0;
-                let pCarb = Math.min((sums.carb / GOALS.carb) * 100, 100) || 0;
-                let pFat = Math.min((sums.fat / GOALS.fat) * 100, 100) || 0;
-                let pFib = Math.min((sums.fib / GOALS.fib) * 100, 100) || 0;
-                
                 let sCell = document.getElementById(`summary_d${day}`);
                 if (sCell) {
                     sCell.innerHTML = `
                         <div class="summary-title">Spolu: ${sums.cal} / ${GOALS.cal} kcal</div>
-                        <div class="macro-progress-text">
-                            <div class="mpt-fill" style="width:${pCal}%; background:var(--primary-light);"></div>
-                            <span class="mpt-label">🔥 Kalórie</span><span class="mpt-value">${sums.cal}/${GOALS.cal}</span>
-                        </div>
-                        <div class="macro-progress-text">
-                            <div class="mpt-fill" style="width:${pPro}%; background:var(--secondary-light);"></div>
-                            <span class="mpt-label">🥩 Bielkoviny</span><span class="mpt-value">${sums.pro}/${GOALS.pro}g</span>
-                        </div>
-                        <div class="macro-progress-text">
-                            <div class="mpt-fill" style="width:${pCarb}%; background:var(--blue-light);"></div>
-                            <span class="mpt-label">🍞 Sacharidy</span><span class="mpt-value">${sums.carb}/${GOALS.carb}g</span>
-                        </div>
-                        <div class="macro-progress-text">
-                            <div class="mpt-fill" style="width:${pFat}%; background:var(--yellow-light);"></div>
-                            <span class="mpt-label">🥑 Tuky</span><span class="mpt-value">${sums.fat}/${GOALS.fat}g</span>
-                        </div>
-                        <div class="macro-progress-text">
-                            <div class="mpt-fill" style="width:${pFib}%; background:#e7e5e4;"></div>
-                            <span class="mpt-label">🌾 Vláknina</span><span class="mpt-value">${sums.fib}/${GOALS.fib}g</span>
-                        </div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.cal/GOALS.cal)*100,100)}%; background:var(--primary-light);"></div><span class="mpt-label">🔥 Kcal</span><span class="mpt-value">${sums.cal}/${GOALS.cal}</span></div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.pro/GOALS.pro)*100,100)}%; background:var(--secondary-light);"></div><span class="mpt-label">🥩 Pro</span><span class="mpt-value">${sums.pro}/${GOALS.pro}g</span></div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.carb/GOALS.carb)*100,100)}%; background:var(--blue-light);"></div><span class="mpt-label">🍞 Sac</span><span class="mpt-value">${sums.carb}/${GOALS.carb}g</span></div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fat/GOALS.fat)*100,100)}%; background:var(--yellow-light);"></div><span class="mpt-label">🥑 Tuk</span><span class="mpt-value">${sums.fat}/${GOALS.fat}g</span></div>
                     `;
                 }
             }
         }
 
-        // --- 5. Logika Modálnych Okien ---
-        function openMealModalByIDs(day, mIdx) {
-            openMealModal(currentMealPlan[day][mIdx]);
-        }
+        function openMealModalByIDs(day, mIdx) { openMealModal(currentMealPlan[day][mIdx]); }
 
         function openMealModal(meal) {
-            currentMealId = `d${meal.day}_m${meal.mIdx}`;
-            currentMealDay = meal.day;
-            currentMealIdx = meal.mIdx;
-            
+            currentMealId = `d${meal.day}_m${meal.mIdx}`; currentMealDay = meal.day; currentMealIdx = meal.mIdx;
             document.getElementById("mTitle").innerText = meal.title;
             document.getElementById("mMacros").innerHTML = `
-                <span class="macro-badge bg-cal">🔥 ${meal.cal} kcal</span>
-                <span class="macro-badge bg-pro">🥩 ${meal.pro}g Pro</span>
-                <span class="macro-badge bg-carb">🍞 ${meal.carb}g Sac</span>
-                <span class="macro-badge bg-fat">🥑 ${meal.fat}g Tuk</span>
-                <span class="macro-badge bg-fib">🌾 ${meal.fib}g Vlák</span>
-            `;
+                <span class="macro-badge bg-cal">🔥 ${meal.cal} kcal</span><span class="macro-badge bg-pro">🥩 ${meal.pro}g Pro</span>
+                <span class="macro-badge bg-carb">🍞 ${meal.carb}g Sac</span><span class="macro-badge bg-fat">🥑 ${meal.fat}g Tuk</span><span class="macro-badge bg-fib">🌾 ${meal.fib}g Vlák</span>`;
             
             let status = mealStatuses[currentMealId];
             document.getElementById("btnEaten").className = "btn-status btn-eaten" + (status === 'eaten' ? " active" : "");
             document.getElementById("btnSkipped").className = "btn-status btn-skipped" + (status === 'skipped' ? " active" : "");
-            
-            document.getElementById("mModalReload").onclick = () => {
-                reloadSingleMeal(meal.day, meal.mIdx, true);
-                openMealModal(currentMealPlan[meal.day][meal.mIdx]); 
-            };
-            document.getElementById("mModalCart").onclick = () => {
-                addSingleMealToCart(meal.day, meal.mIdx);
-            };
 
-            let ingList = document.getElementById("mIngredients");
-            ingList.innerHTML = "";
+            let ingList = document.getElementById("mIngredients"); ingList.innerHTML = "";
             meal.ing.forEach((item, iIdx) => {
                 let id = `d${meal.day}_m${meal.mIdx}_i${iIdx}`;
                 let isCheckedInCart = shoppingList.includes(id);
-                let key = extractKeyFromText(item.text);
-                let isPurchased = purchasedList.includes(key);
+                let key = extractKeyFromText(item.text); let isPurchased = purchasedList.includes(key);
                 
                 let checkboxChecked = isCheckedInCart ? "checked" : "";
                 let infoClass = isPurchased ? "ingredient-info purchased" : "ingredient-info";
                 let customTag = item.isCustom ? "<span style='font-size:0.7rem; background:#e7e5e4; padding:2px 6px; border-radius:4px; margin-left:5px;'>Vlastné</span>" : "";
-
-                let match = item.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                let match = item.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
                 let nameOnly = match ? match[3] : item.text;
 
                 let li = document.createElement("li");
-                li.style.display = "flex";
-                li.style.alignItems = "center";
-                li.style.justifyContent = "space-between";
-                li.style.gap = "10px";
                 li.innerHTML = `
                     <label class="checkbox-wrapper" style="flex:1;">
                         <input type="checkbox" onchange="toggleIngredient('${id}', this.checked)" ${checkboxChecked}>
                         <div class="checkmark"></div>
                         <div class="${infoClass}">
-                            <span class="ingredient-text">${item.text} ${customTag}</span>
-                            <span class="ingredient-macro-detail">${item.cal} kcal | P:${item.pro}g | S:${item.carb}g | T:${item.fat}g | V:${item.fib}g</span>
+                            <span class="ingredient-text">${escapeHTML(item.text)} ${customTag}</span>
+                            <span class="ingredient-macro-detail">${item.cal} kcal | P:${item.pro}g | S:${item.carb}g | T:${item.fat}g</span>
                         </div>
                     </label>
-                    ${!item.isCustom ? `<button class="icon-btn-small" onclick="swapIngredient(${meal.day}, ${meal.mIdx}, ${iIdx}, '${nameOnly}')" title="Vymeniť za alternatívu" style="flex-shrink:0;">🔄</button>` : ""}
+                    ${!item.isCustom ? `<button class="icon-btn-small" onclick="swapIngredient(${meal.day}, ${meal.mIdx}, ${iIdx}, '${escapeHTML(nameOnly)}')" title="Vymeniť za alternatívu" style="flex-shrink:0;">🔄</button>` : ""}
                 `;
                 ingList.appendChild(li);
             });
@@ -829,96 +727,60 @@
             document.getElementById("mSteps").innerText = meal.steps;
             document.getElementById("cfName").value = "";
             ["cfCal", "cfPro", "cfCarb", "cfFat", "cfFib"].forEach(id => document.getElementById(id).value = "");
-
             document.getElementById("mealModal").classList.add("active");
         }
 
         function openSummaryModal(day) {
             currentMealDay = day;
+            const nazvyDni = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
             document.getElementById("sTitle").innerText = `${nazvyDni[day-1]} - Detailný prehľad`;
-            
-            let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
-            let eatenMealsHtml = "";
-
+            let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 }; let eatenMealsHtml = "";
             currentMealPlan[day].forEach(meal => {
                 if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
-                    sums.cal += meal.cal; sums.pro += meal.pro; 
-                    sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
-                    eatenMealsHtml += `<li style="padding:10px 0; border-bottom:1px dashed #e7e5e4;">✔️ ${meal.title} <br><span style="color:#78716c; font-size:0.8rem; margin-left:22px;">🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g Pro | 🍞 ${meal.carb}g Sac</span></li>`;
+                    sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
+                    eatenMealsHtml += `<li style="padding:10px 0; border-bottom:1px dashed #e7e5e4;">✔️ ${escapeHTML(meal.title)} <br><span style="color:#78716c; font-size:0.8rem; margin-left:22px;">🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g Pro | 🍞 ${meal.carb}g Sac</span></li>`;
                 }
             });
-
             if(eatenMealsHtml === "") eatenMealsHtml = "<p style='color:#78716c; font-style:italic;'>Zatiaľ si v tento deň neoznačil žiadne zjedené jedlo.</p>";
             document.getElementById("sEatenMeals").innerHTML = eatenMealsHtml;
-
-            const renderBar = (label, current, goal, color) => {
-                let pct = Math.min((current / goal) * 100, 100) || 0;
-                return `
-                <div class="big-progress-row">
-                    <div class="bp-header">
-                        <span>${label}</span>
-                        <span class="bp-val">${current} / ${goal}</span>
-                    </div>
-                    <div class="bp-bar"><div class="bp-fill" style="width:${pct}%; background:${color};"></div></div>
-                </div>`;
-            };
-
-            document.getElementById("sCharts").innerHTML = 
-                renderBar("🔥 Kalórie (kcal)", sums.cal, GOALS.cal, "var(--primary)") +
-                renderBar("🥩 Bielkoviny (g)", sums.pro, GOALS.pro, "var(--secondary)") +
-                renderBar("🍞 Sacharidy (g)", sums.carb, GOALS.carb, "var(--blue-main)") +
-                renderBar("🥑 Tuky (g)", sums.fat, GOALS.fat, "var(--yellow-main)") +
-                renderBar("🌾 Vláknina (g)", sums.fib, GOALS.fib, "#78716c");
-
+            const renderBar = (label, current, goal, color) => `<div class="big-progress-row"><div class="bp-header"><span>${label}</span><span class="bp-val">${current} / ${goal}</span></div><div class="bp-bar"><div class="bp-fill" style="width:${Math.min((current/goal)*100, 100)}%; background:${color};"></div></div></div>`;
+            document.getElementById("sCharts").innerHTML = renderBar("🔥 Kalórie (kcal)", sums.cal, GOALS.cal, "var(--primary)") + renderBar("🥩 Bielkoviny (g)", sums.pro, GOALS.pro, "var(--secondary)") + renderBar("🍞 Sacharidy (g)", sums.carb, GOALS.carb, "var(--blue-main)") + renderBar("🥑 Tuky (g)", sums.fat, GOALS.fat, "var(--yellow-main)") + renderBar("🌾 Vláknina (g)", sums.fib, GOALS.fib, "#78716c");
             document.getElementById("summaryModal").classList.add("active");
         }
 
         function setMealStatus(status) {
             let cell = document.getElementById(`cell_${currentMealId}`);
             if (mealStatuses[currentMealId] === status) {
-                delete mealStatuses[currentMealId];
-                cell.classList.remove('meal-eaten', 'meal-skipped');
-                document.getElementById("btnEaten").classList.remove('active');
-                document.getElementById("btnSkipped").classList.remove('active');
+                delete mealStatuses[currentMealId]; cell.classList.remove('meal-eaten', 'meal-skipped');
+                document.getElementById("btnEaten").classList.remove('active'); document.getElementById("btnSkipped").classList.remove('active');
             } else {
-                mealStatuses[currentMealId] = status;
-                cell.classList.remove('meal-eaten', 'meal-skipped');
+                mealStatuses[currentMealId] = status; cell.classList.remove('meal-eaten', 'meal-skipped');
                 cell.classList.add(status === 'eaten' ? 'meal-eaten' : 'meal-skipped');
                 document.getElementById("btnEaten").className = "btn-status btn-eaten" + (status === 'eaten' ? " active" : "");
                 document.getElementById("btnSkipped").className = "btn-status btn-skipped" + (status === 'skipped' ? " active" : "");
             }
-            localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
-            updateAllDaySummaries();
+            localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses)); updateAllDaySummaries();
         }
 
         function addCustomFood() {
             let name = document.getElementById("cfName").value.trim();
             if(!name) return alert("Zadaj názov suroviny.");
-            
             let cf = {
-                text: name,
-                cal: parseInt(document.getElementById("cfCal").value) || 0,
-                pro: parseInt(document.getElementById("cfPro").value) || 0,
-                carb: parseInt(document.getElementById("cfCarb").value) || 0,
-                fat: parseInt(document.getElementById("cfFat").value) || 0,
-                fib: parseInt(document.getElementById("cfFib").value) || 0
+                text: name, cal: parseInt(document.getElementById("cfCal").value) || 0,
+                pro: parseInt(document.getElementById("cfPro").value) || 0, carb: parseInt(document.getElementById("cfCarb").value) || 0,
+                fat: parseInt(document.getElementById("cfFat").value) || 0, fib: parseInt(document.getElementById("cfFib").value) || 0
             };
-            
             if (!customFoods[currentMealId]) customFoods[currentMealId] = [];
             customFoods[currentMealId].push(cf);
             localStorage.setItem('customFoods', JSON.stringify(customFoods));
-            
-            generateScaledPlan();
-            renderGrid();
-            updateAllDaySummaries();
+            generateScaledPlan(); renderGrid(); updateAllDaySummaries();
             openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
         }
 
-        // --- 6. Logika Inteligentného Nákupného Zoznamu ---
+        // --- NÁKUP ---
         function extractKeyFromText(text) {
-            let match = text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
-            let unit = "", name = text;
-            if(match) { unit = match[2]; name = match[3]; }
+            let match = text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
+            let unit = "", name = text; if(match) { unit = match[2]; name = match[3]; }
             return name.toLowerCase() + "|" + unit;
         }
 
@@ -936,12 +798,11 @@
             let cartObj = {};
             shoppingList.forEach(id => {
                 let parts = id.match(/d(\d+)_m(\d+)_i(\d+)/);
-                if(parts) {
+                if(parts && currentMealPlan[parts[1]][parts[2]].ing[parts[3]]) {
                     let rawStr = currentMealPlan[parts[1]][parts[2]].ing[parts[3]].text; 
-                    let match = rawStr.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                    let match = rawStr.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
                     let qty = 1, unit = "", name = rawStr;
                     if(match) { qty = parseFloat(match[1].replace(',', '.')); unit = match[2]; name = match[3]; }
-
                     let key = name.toLowerCase() + "|" + unit;
                     if(!cartObj[key]) cartObj[key] = { qty: 0, unit: unit, name: name };
                     cartObj[key].qty += qty;
@@ -953,129 +814,76 @@
         function toggleIngredient(id, isChecked) {
             if (isChecked && !shoppingList.includes(id)) shoppingList.push(id);
             else shoppingList = shoppingList.filter(item => item !== id);
-            
-            let currentKeys = Object.keys(getAggregatedCart());
-            purchasedList = purchasedList.filter(k => currentKeys.includes(k));
-            saveCartData();
-            if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+            let currentKeys = Object.keys(getAggregatedCart()); purchasedList = purchasedList.filter(k => currentKeys.includes(k));
+            saveCartData(); if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
         }
 
         function togglePurchased(key, isPurchased) {
             if (isPurchased && !purchasedList.includes(key)) purchasedList.push(key);
             else purchasedList = purchasedList.filter(k => k !== key);
-            saveCartData();
-            openCart(); 
-            if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+            saveCartData(); openCart(); if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
         }
 
         function saveCartData() {
-            localStorage.setItem('shoppingListIDs', JSON.stringify(shoppingList));
-            localStorage.setItem('purchasedKeys', JSON.stringify(purchasedList));
-            let currentKeys = Object.keys(getAggregatedCart());
-            document.getElementById("cartCount").innerText = currentKeys.length - purchasedList.filter(k => currentKeys.includes(k)).length;
+            localStorage.setItem('shoppingListIDs', JSON.stringify(shoppingList)); localStorage.setItem('purchasedKeys', JSON.stringify(purchasedList));
+            let currentKeys = Object.keys(getAggregatedCart()); document.getElementById("cartCount").innerText = currentKeys.length - purchasedList.filter(k => currentKeys.includes(k)).length;
         }
 
         function addSingleMealToCart(day, mIdx) {
-            currentMealPlan[day][mIdx].ing.forEach((item, iIdx) => {
-                let id = `d${day}_m${mIdx}_i${iIdx}`;
-                if (!shoppingList.includes(id)) shoppingList.push(id);
-            });
-            saveCartData();
-            if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
-            alert("Suroviny z jedla boli úspešne pridané do nákupu.");
+            currentMealPlan[day][mIdx].ing.forEach((item, iIdx) => { let id = `d${day}_m${mIdx}_i${iIdx}`; if (!shoppingList.includes(id)) shoppingList.push(id); });
+            saveCartData(); alert("Suroviny z jedla boli úspešne pridané do nákupu.");
         }
 
         function addWholeDayToCart(day) {
-            currentMealPlan[day].forEach(meal => {
-                meal.ing.forEach((item, iIdx) => {
-                    let id = `d${day}_m${meal.mIdx}_i${iIdx}`;
-                    if (!shoppingList.includes(id)) shoppingList.push(id);
-                });
-            });
-            saveCartData();
-            alert("Všetky jedlá z tohto dňa boli pridané do nákupného zoznamu.");
+            currentMealPlan[day].forEach(meal => { meal.ing.forEach((item, iIdx) => { let id = `d${day}_m${meal.mIdx}_i${iIdx}`; if (!shoppingList.includes(id)) shoppingList.push(id); }); });
+            saveCartData(); alert("Všetky jedlá z tohto dňa boli pridané do nákupného zoznamu.");
         }
 
         function addWholeWeekToCart() {
             for (let d = 1; d <= 7; d++) {
-                currentMealPlan[d].forEach(meal => {
-                    meal.ing.forEach((item, iIdx) => {
-                        let id = `d${d}_m${meal.mIdx}_i${iIdx}`;
-                        if (!shoppingList.includes(id)) shoppingList.push(id);
-                    });
-                });
+                currentMealPlan[d].forEach(meal => { meal.ing.forEach((item, iIdx) => { let id = `d${d}_m${meal.mIdx}_i${iIdx}`; if (!shoppingList.includes(id)) shoppingList.push(id); }); });
             }
-            saveCartData(); openCart(); 
+            saveCartData(); 
+            alert("Všetky suroviny zo 7-dňového plánu boli úspešne pridané do nákupného zoznamu.");
         }
 
         function createCartItemHTML(key, item, isPurchased) {
             let displayString = item.unit ? `${+(item.qty).toFixed(1)} ${item.unit} ${item.name}` : `${item.name}`;
-            let isChecked = isPurchased ? "checked" : "";
-            let textStyle = isPurchased ? "text-decoration: line-through; opacity: 0.5;" : "";
-            return `
-            <li style="padding:10px 0;">
-                <label class="checkbox-wrapper">
-                    <input type="checkbox" onchange="togglePurchased('${key}', this.checked)" ${isChecked}>
-                    <div class="checkmark"></div>
-                    <span class="ingredient-text" style="margin-top:2px; ${textStyle}">${displayString}</span>
-                </label>
-            </li>`;
+            let isChecked = isPurchased ? "checked" : ""; let textStyle = isPurchased ? "text-decoration: line-through; opacity: 0.5;" : "";
+            return `<li style="padding:10px 0;"><label class="checkbox-wrapper"><input type="checkbox" onchange="togglePurchased('${key}', this.checked)" ${isChecked}><div class="checkmark"></div><span class="ingredient-text" style="margin-top:2px; ${textStyle}">${escapeHTML(displayString)}</span></label></li>`;
         }
 
         function openCart() {
-            let cartContent = document.getElementById("cartContent");
-            let aggregated = getAggregatedCart();
-            let keys = Object.keys(aggregated);
-            
+            let cartContent = document.getElementById("cartContent"); let aggregated = getAggregatedCart(); let keys = Object.keys(aggregated);
             if (keys.length === 0) {
-                cartContent.innerHTML = "<p class='empty-cart-msg'>Zoznam je prázdny. Odškrtni suroviny v receptoch.</p>";
-                document.getElementById("cartModal").classList.add("active");
-                return;
+                cartContent.innerHTML = "<p class='empty-cart-msg'>Zoznam je prázdny. Vyber si suroviny alebo pridaj celé dni.</p>";
+                document.getElementById("cartModal").classList.add("active"); return;
             }
-
-            let sortMethod = document.getElementById("cartSort").value;
-            let unpurchased = keys.filter(k => !purchasedList.includes(k));
-            let purchased = keys.filter(k => purchasedList.includes(k));
-
+            let sortMethod = document.getElementById("cartSort").value; let unpurchased = keys.filter(k => !purchasedList.includes(k)); let purchased = keys.filter(k => purchasedList.includes(k));
             unpurchased.sort((a, b) => {
                 let itemA = aggregated[a]; let itemB = aggregated[b];
                 if (sortMethod === "qty") return itemB.qty - itemA.qty; 
                 else if (sortMethod === "cat") {
                     let catA = getCategory(itemA.name), catB = getCategory(itemB.name);
-                    if (catA === catB) return itemA.name.localeCompare(itemB.name);
-                    return catA.localeCompare(catB);
+                    return catA === catB ? itemA.name.localeCompare(itemB.name) : catA.localeCompare(catB);
                 } else return itemA.name.localeCompare(itemB.name); 
             });
 
             let listHTML = "";
             if (sortMethod === "cat") {
-                let categories = {};
-                unpurchased.forEach(k => {
-                    let cat = getCategory(aggregated[k].name);
-                    if (!categories[cat]) categories[cat] = [];
-                    categories[cat].push(k);
-                });
+                let categories = {}; unpurchased.forEach(k => { let cat = getCategory(aggregated[k].name); if (!categories[cat]) categories[cat] = []; categories[cat].push(k); });
                 Object.keys(categories).sort().forEach(cat => {
-                    listHTML += `<h4 style="margin-top:15px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-main); font-size: 0.95rem;">${cat}</h4>`;
-                    listHTML += `<ul class='ingredients' style='margin-bottom:0;'>`;
-                    categories[cat].forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false));
-                    listHTML += `</ul>`;
+                    listHTML += `<h4 style="margin-top:15px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-main); font-size: 0.95rem;">${cat}</h4><ul class='ingredients' style='margin-bottom:0;'>`;
+                    categories[cat].forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false)); listHTML += `</ul>`;
                 });
             } else {
-                listHTML += "<ul class='ingredients' style='margin-bottom:0;'>";
-                unpurchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false));
-                listHTML += "</ul>";
+                listHTML += "<ul class='ingredients' style='margin-bottom:0;'>"; unpurchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false)); listHTML += "</ul>";
             }
-
             if (purchased.length > 0) {
-                listHTML += `<h4 style="margin-top:25px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-muted); font-size: 0.95rem;">✔️ Zakúpené</h4>`;
-                listHTML += "<ul class='ingredients' style='margin-bottom:0;'>";
-                purchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], true));
-                listHTML += "</ul>";
+                listHTML += `<h4 style="margin-top:25px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-muted); font-size: 0.95rem;">✔️ Zakúpené</h4><ul class='ingredients' style='margin-bottom:0;'>`;
+                purchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], true)); listHTML += "</ul>";
             }
-
-            cartContent.innerHTML = listHTML;
-            document.getElementById("cartModal").classList.add("active");
+            cartContent.innerHTML = listHTML; document.getElementById("cartModal").classList.add("active");
         }
 
         function clearCart() {
@@ -1092,52 +900,29 @@
             overlay.addEventListener('click', function(e) { if(e.target === this) this.classList.remove("active"); });
         });
 
-        function getSwapGroup(name) {
-            let n = name.toLowerCase();
-            if (n.match(/(losos|makrel|pstruh).*úden|úden.*(losos|makrel|pstruh)/)) return 'ryby_udene';
-            if (n.match(/(losos|tresk|tuniak|zubáč|kapor)/)) return 'ryby';
-            if (n.match(/(kurac|morčac)/)) return 'hydina';
-            if (n.match(/(jablk|banán|hrušk|čučoried|jahôd|malin|fig|mang|brosky|pomaranč|slivk)/)) return 'ovocie';
-            if (n.match(/(ryž|zemiak|batat|cestovin|kuskus|bulgur|pohánk|quino)/)) return 'prilohy';
-            if (n.match(/(vločk)/)) return 'vlocky';
-            if (n.match(/(orech|mandl|kešu|arašid|lieskov)/)) return 'orechy';
-            if (n.match(/(brokolic|karfiol|mrkv|cuket|paradaj|uhork|paprik|šalát|špenát)/)) return 'zelenina';
-            if (n.match(/(tvaroh|skyr|gréck.*jogurt)/)) return 'mliecne_huste';
-            return null;
-        }
-
         function swapIngredient(day, mIdx, iIdx, name) {
-            let group = getSwapGroup(name);
-            if (!group) {
-                alert("Pre túto konkrétnu surovinu zatiaľ nemáme v databáze vhodnú alternatívu.");
-                return;
-            }
+            let n = name.toLowerCase(); let group = null;
+            if (n.match(/(losos|makrel|pstruh).*úden|úden.*(losos|makrel|pstruh)/)) group = 'ryby_udene';
+            else if (n.match(/(losos|tresk|tuniak|zubáč|kapor)/)) group = 'ryby';
+            else if (n.match(/(kurac|morčac)/)) group = 'hydina';
+            else if (n.match(/(jablk|banán|hrušk|čučoried|jahôd|malin|fig|mang|brosky|pomaranč|slivk)/)) group = 'ovocie';
+            else if (n.match(/(ryž|zemiak|batat|cestovin|kuskus|bulgur|pohánk|quino)/)) group = 'prilohy';
+            else if (n.match(/(vločk)/)) group = 'vlocky';
+            else if (n.match(/(orech|mandl|kešu|arašid|lieskov)/)) group = 'orechy';
+            else if (n.match(/(brokolic|karfiol|mrkv|cuket|paradaj|uhork|paprik|šalát|špenát)/)) group = 'zelenina';
+            else if (n.match(/(tvaroh|skyr|gréck.*jogurt)/)) group = 'mliecne_huste';
+
+            if (!group) return alert("Pre túto konkrétnu surovinu zatiaľ nemáme v databáze vhodnú alternatívu.");
             
-            let options = SWAP_DB[group];
-            let validOptions = options.filter(opt => !name.toLowerCase().includes(opt.n.toLowerCase()));
+            let options = SWAP_DB[group]; let validOptions = options.filter(opt => !name.toLowerCase().includes(opt.n.toLowerCase()));
             if (validOptions.length === 0) validOptions = options;
-            
-            let randomChoice = validOptions[Math.floor(Math.random() * validOptions.length)];
-            
-            let swapKey = `d${day}_m${mIdx}_i${iIdx}`;
-            userSwaps[swapKey] = randomChoice;
+            userSwaps[`d${day}_m${mIdx}_i${iIdx}`] = validOptions[Math.floor(Math.random() * validOptions.length)];
             localStorage.setItem('userSwaps', JSON.stringify(userSwaps));
-            
-            generateScaledPlan();
-            renderGrid();
-            updateAllDaySummaries();
-            openMealModal(currentMealPlan[day][mIdx]);
+            generateScaledPlan(); renderGrid(); updateAllDaySummaries(); openMealModal(currentMealPlan[day][mIdx]);
         }
 
-        // --- REGISTRÁCIA PWA SERVICE WORKERA ---
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(reg => {
-                    console.log('Service Worker úspešne zaregistrovaný!', reg);
-                }).catch(err => {
-                    console.log('Registrácia Service Workera zlyhala: ', err);
-                });
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW chyba:', err)); });
         }
     </script>
 </body>
