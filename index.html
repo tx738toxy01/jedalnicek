@@ -452,6 +452,145 @@
     }
 }
 
+function generateScaledPlan() {
+    currentMealPlan = {};
+    
+    let rPro = GOALS.pro / BASE_GOALS.pro || 1;
+    let rCarb = GOALS.carb / BASE_GOALS.carb || 1;
+    let rFat = GOALS.fat / BASE_GOALS.fat || 1;
+    let rCal = GOALS.cal / BASE_GOALS.cal || 1;
+
+    for (let day = 1; day <= 7; day++) {
+        currentMealPlan[day] = [];
+        
+        let dayCustomCals = 0;
+        let proBaseCals = 0;
+        let carbBaseCals = 0;
+        let fatBaseCals = 0;
+        let otherBaseCals = 0;
+
+        // FÁZA 1: Sumarizácia kalórií pre dany deň
+        for (let mIdx = 0; mIdx <= 4; mIdx++) {
+            let poolIdx = chosenMealsTimeline[day][mIdx];
+            if(poolIdx === undefined) poolIdx = 0; 
+            
+            let mealBlueprint = pools[mIdx][poolIdx];
+            if(!mealBlueprint) continue;
+
+            let cID = `d${day}_m${mIdx}`;
+            if (customFoods[cID]) {
+                customFoods[cID].forEach(cf => { dayCustomCals += cf.cal; });
+            }
+
+            mealBlueprint.ing.forEach(i => {
+                let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                if(match) {
+                    let cat = getCategory(match[3]);
+                    if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') proBaseCals += i.cal;
+                    else if (cat === '🍞 Prílohy a Pečivo') carbBaseCals += i.cal;
+                    else if (cat === '🥜 Tuky, Orechy a Semená') fatBaseCals += i.cal;
+                    else otherBaseCals += i.cal;
+                } else {
+                    otherBaseCals += i.cal;
+                }
+            });
+        }
+
+        // FÁZA 2: Matematika rozdelenia zostatkových kalórií
+        let budgetCals = GOALS.cal - dayCustomCals;
+        if (budgetCals < 0) budgetCals = 0;
+
+        let maxR = Math.max(rPro, rCarb, rFat);
+        let finalRPro = rPro; let finalRCarb = rCarb; let finalRFat = rFat; let finalROther = rCal;
+
+        if (maxR === rPro) {
+            let remaining = budgetCals - (proBaseCals * rPro);
+            let baseRemaining = carbBaseCals + fatBaseCals + otherBaseCals;
+            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
+            finalRCarb = adaptRatio; finalRFat = adaptRatio; finalROther = adaptRatio;
+        } else if (maxR === rCarb) {
+            let remaining = budgetCals - (carbBaseCals * rCarb);
+            let baseRemaining = proBaseCals + fatBaseCals + otherBaseCals;
+            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
+            finalRPro = adaptRatio; finalRFat = adaptRatio; finalROther = adaptRatio;
+        } else {
+            let remaining = budgetCals - (fatBaseCals * rFat);
+            let baseRemaining = proBaseCals + carbBaseCals + otherBaseCals;
+            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
+            finalRPro = adaptRatio; finalRCarb = adaptRatio; finalROther = adaptRatio;
+        }
+
+        // FÁZA 3: Vytvorenie reálneho dňa a škálovanie
+        for (let mIdx = 0; mIdx <= 4; mIdx++) {
+            let poolIdx = chosenMealsTimeline[day][mIdx];
+            if(poolIdx === undefined) poolIdx = 0;
+            
+            let mealBlueprint = pools[mIdx][poolIdx];
+            if(!mealBlueprint) continue;
+
+            let mealCopy = JSON.parse(JSON.stringify(mealBlueprint));
+            mealCopy.day = day; mealCopy.mIdx = mIdx;
+            
+            let cID = `d${day}_m${mIdx}`;
+            if (customFoods[cID]) {
+                let cfCopy = JSON.parse(JSON.stringify(customFoods[cID]));
+                cfCopy.forEach(cf => { cf.isCustom = true; });
+                mealCopy.ing = mealCopy.ing.concat(cfCopy);
+            }
+
+            mealCopy.cal = 0; mealCopy.pro = 0; mealCopy.carb = 0; mealCopy.fat = 0; mealCopy.fib = 0;
+
+            mealCopy.ing.forEach(i => {
+                if(!i.isCustom) {
+                    let effectiveRatio = finalROther;
+                    let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                    
+                    if(match) {
+                        let qty = parseFloat(match[1].replace(',', '.'));
+                        let unit = match[2];
+                        let name = match[3];
+                        let cat = getCategory(name);
+                        
+                        let specificRatio = finalROther;
+                        if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') specificRatio = finalRPro;
+                        else if (cat === '🍞 Prílohy a Pečivo') specificRatio = finalRCarb;
+                        else if (cat === '🥜 Tuky, Orechy a Semená') specificRatio = finalRFat;
+
+                        let finalQty = qty * specificRatio;
+                        let lowerUnit = unit.toLowerCase();
+
+                        if (lowerUnit === 'ks') {
+                            finalQty = Math.round(finalQty);
+                            if (finalQty === 0 && qty > 0) finalQty = 1;
+                        } else if (lowerUnit === 'g' || lowerUnit === 'ml') {
+                            finalQty = Math.round(finalQty);
+                        } else if (lowerUnit === 'čl' || lowerUnit === 'pl' || lowerUnit === 'hrsť') {
+                            finalQty = Math.round(finalQty * 2) / 2;
+                            if (finalQty === 0 && qty > 0) finalQty = 0.5;
+                        } else {
+                            finalQty = +(finalQty).toFixed(1);
+                        }
+
+                        effectiveRatio = qty > 0 ? (finalQty / qty) : 1;
+                        i.text = `${finalQty} ${unit} ${name}`;
+                    }
+                    
+                    i.cal = Math.round(i.cal * effectiveRatio);
+                    i.pro = Math.round(i.pro * effectiveRatio);
+                    i.carb = Math.round(i.carb * effectiveRatio);
+                    i.fat = Math.round(i.fat * effectiveRatio);
+                    i.fib = Math.round(i.fib * effectiveRatio);
+                }
+                
+                mealCopy.cal += i.cal; mealCopy.pro += i.pro; mealCopy.carb += i.carb; 
+                mealCopy.fat += i.fat; mealCopy.fib += i.fib;
+            });
+            
+            currentMealPlan[day].push(mealCopy);
+        }
+    }
+}
+
         // --- 4. Vykresľovanie Rozhrania (Grid UI) ---
         function renderGrid() {
             const grid = document.getElementById("scheduleGrid");
