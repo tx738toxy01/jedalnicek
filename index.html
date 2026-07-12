@@ -306,9 +306,9 @@
                 <h2 style="margin: 0;">Nákup</h2>
                 <div class="modal-header-actions" style="display: flex; gap: 8px;">
                     <select id="cartSort" class="select-sort" onchange="openCart()">
-                        <option value="name">Podľa názvu</option>
+                        <option value="cat" selected>Podľa kategórie</option>
                         <option value="qty">Podľa množstva</option>
-                        <option value="cat">Podľa kategórie</option>
+                        <option value="name">Podľa názvu</option>
                     </select>
                     <select id="cartSortDir" class="select-sort" onchange="openCart()">
                         <option value="asc">Vzostupne ⬇️</option>
@@ -365,6 +365,21 @@
         
         let currentSearchDay = 1;
         let currentSearchMIdx = 0;
+
+let pinnedDay = loadStorage('pinnedDay', null);
+
+        function togglePinDay(day, isChecked) {
+            if (isChecked) {
+                pinnedDay = day; // Pripne nový deň
+            } else {
+                pinnedDay = null; // Odopne ho, ak ho odškrtneš
+            }
+            localStorage.setItem('pinnedDay', JSON.stringify(pinnedDay));
+            
+            // Prekreslíme tabuľku s novým poradím a doplníme čísla
+            renderGrid();
+            updateAllDaySummaries(); 
+        }
 
         // DB Nahrad
         const SWAP_DB = {
@@ -607,9 +622,25 @@
             `;
             const nazvyDni = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
             
-            for (let day = 1; day <= 7; day++) {
+            // Logika pre zmenu poradia dní (pripnutý ide prvý)
+            let displayDays = [1, 2, 3, 4, 5, 6, 7];
+            if (pinnedDay && displayDays.includes(pinnedDay)) {
+                displayDays = displayDays.filter(d => d !== pinnedDay);
+                displayDays.unshift(pinnedDay);
+            }
+
+            // Vykreslenie dní v novom poradí
+            displayDays.forEach(day => {
+                let isPinned = (pinnedDay === day);
                 let dayCell = document.createElement("div"); dayCell.className = "day-label-box";
-                dayCell.innerHTML = `<div class="day-label">${nazvyDni[day - 1]}</div>
+                dayCell.innerHTML = `
+                    <div class="day-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>${nazvyDni[day - 1]}</span>
+                        <label style="font-size:0.75rem; display:flex; align-items:center; cursor:pointer; font-weight:normal;" title="${isPinned ? 'Odopnúť' : 'Pripnúť na vrch'}">
+                            <input type="checkbox" style="margin-right:4px; cursor:pointer;" ${isPinned ? 'checked' : ''} onchange="togglePinDay(${day}, this.checked)">
+                            📌
+                        </label>
+                    </div>
                     <div class="day-action-icons">
                         <button class="icon-btn-small" onclick="reloadWholeDay(${day})" title="Nové náhodné jedlá na celý deň">🔄</button>
                         <button class="icon-btn-small" onclick="addWholeDayToCart(${day})" title="Pridať celý deň do nákupu">🛒</button>
@@ -643,7 +674,7 @@
                 let summaryCell = document.createElement("div"); summaryCell.className = "summary-cell";
                 summaryCell.id = `summary_d${day}`; summaryCell.onclick = () => openSummaryModal(day);
                 grid.appendChild(summaryCell);
-            }
+            });
         }
 
         // Vyhľadávanie
