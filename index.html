@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Môj Inteligentný Jedálniček</title>
-    <!-- Favicon a Apple Touch Icon vygenerované cez SVG (žiadne obrázky netreba) -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%2250%22 font-size=%2280%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🍽️</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%2250%22 font-size=%2280%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🍽️</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23f97316%22/><text x=%2250%22 y=%2250%22 font-size=%2265%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🍽️</text></svg>">
 
-<!-- PWA Manifest a nastavenie zobrazenia -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f97316">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -187,6 +185,36 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
+
+        /* Média Queries pre mobily */
+        @media (max-width: 900px) {
+            .schedule-container { padding: 0; }
+            .grid-table { 
+                display: flex; 
+                flex-direction: column; 
+                min-width: auto; 
+            }
+            .col-header { display: none; }
+            .day-label-box {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                background: var(--surface);
+                padding: 15px;
+                border-radius: var(--radius-sm);
+                margin-top: 20px;
+                border: 1px solid var(--border);
+            }
+            .meal-cell-top { padding-right: 0; }
+            .meal-cell-actions { 
+                position: relative; 
+                opacity: 1; 
+                justify-content: flex-end; 
+                margin-top: 10px; 
+                right: 0; 
+                top: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -331,6 +359,7 @@
         function buildPools() {
             Object.keys(BASE_MEAL_PLAN).forEach(dayKey => {
                 let dayMeals = BASE_MEAL_PLAN[dayKey];
+                if (!Array.isArray(dayMeals)) return; // Ochrana voči chybám v štruktúre dát
                 dayMeals.forEach((meal, mIdx) => {
                     if (mIdx <= 4) {
                         pools[mIdx].push(JSON.parse(JSON.stringify(meal)));
@@ -419,176 +448,166 @@
         }
 
         function updateGoal(type) {
-    let val = parseInt(document.getElementById(`goal-${type}`).value);
-    
-    // Ochrana pred zmazaním čísla
-    if (!val || val <= 0) {
-        document.getElementById(`goal-${type}`).value = GOALS[type];
-        return;
-    }
-
-    GOALS[type] = val;
-
-    // Zistíme pôvodný pomer sacharidov a tukov (ako si to jedlo nastavil v základe)
-    let baseCarbCals = BASE_GOALS.carb * 4;
-    let baseFatCals = BASE_GOALS.fat * 9;
-    let flexRatio = baseCarbCals / (baseCarbCals + baseFatCals); // Koľko % z voľných kalórií tvoria sacharidy
-
-    // Fyzikálna kontrola: Len proteín má 4 kcal/g. Kalórie nesmú padnúť pod túto hranicu.
-    let minCalsRequired = (GOALS.pro * 4); 
-    
-    if (GOALS.cal < minCalsRequired) {
-        alert(`Fyziku neoklameš! Len samotné bielkoviny (${GOALS.pro}g) obsahujú ${minCalsRequired} kcal. Nastavujem kalórie na minimum.`);
-        GOALS.cal = minCalsRequired;
-    }
-
-    // Výpočet kalórií, ktoré nám zostali na voľné naloženie (Sacharidy a Tuky)
-    let remainingCals = GOALS.cal - (GOALS.pro * 4);
-
-    if (type === 'carb') {
-        // Ak používateľ silou mocou zmení sacharidy ručne, upravíme len tuky
-        remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.carb * 4);
-        if (remainingCals < 0) {
-            GOALS.cal = (GOALS.pro * 4) + (GOALS.carb * 4);
-            GOALS.fat = 0;
-        } else {
-            GOALS.fat = Math.round(remainingCals / 9);
-        }
-    } else if (type === 'fat') {
-        // Ak používateľ zmení ručne tuky, upravíme len sacharidy
-        remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.fat * 9);
-        if (remainingCals < 0) {
-            GOALS.cal = (GOALS.pro * 4) + (GOALS.fat * 9);
-            GOALS.carb = 0;
-        } else {
-            GOALS.carb = Math.round(remainingCals / 4);
-        }
-    } else if (type === 'cal' || type === 'pro') {
-        // HLAVNÁ LOGIKA: Ak zmeníš Proteín alebo Kalórie, systém automaticky rozdelí zvyšok
-        let newCarbCals = remainingCals * flexRatio;
-        let newFatCals = remainingCals * (1 - flexRatio);
-        
-        GOALS.carb = Math.round(newCarbCals / 4);
-        GOALS.fat = Math.round(newFatCals / 9);
-    }
-    // Vláknina ("fib") do týchto prepočtov nevstupuje, žije si vlastným životom.
-
-    // Aktualizujeme čísla v hlavičke a uložíme
-    setInputsFromGoals();
-    localStorage.setItem('userGoals', JSON.stringify(GOALS));
-    
-    // Prekreslíme celý plán
-    generateScaledPlan();
-    renderGrid();
-    updateAllDaySummaries();
-    
-    let modal = document.getElementById("mealModal");
-    if(modal && modal.classList.contains("active")) {
-        openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
-    }
-}
-
-function generateScaledPlan() {
-    currentMealPlan = {};
-    
-    // Zistíme presné pomery, ako sa zmenili jednotlivé ciele voči základu
-    let rPro = GOALS.pro / BASE_GOALS.pro || 1;
-    let rCarb = GOALS.carb / BASE_GOALS.carb || 1;
-    let rFat = GOALS.fat / BASE_GOALS.fat || 1;
-    let rFib = GOALS.fib / BASE_GOALS.fib || 1;
-    let rCal = GOALS.cal / BASE_GOALS.cal || 1;
-
-    for (let day = 1; day <= 7; day++) {
-        currentMealPlan[day] = [];
-        
-        for (let mIdx = 0; mIdx <= 4; mIdx++) {
-            let poolIdx = chosenMealsTimeline[day][mIdx];
-            if(poolIdx === undefined) poolIdx = 0; 
+            let val = parseInt(document.getElementById(`goal-${type}`).value);
             
-            let mealBlueprint = pools[mIdx][poolIdx];
-            if(!mealBlueprint) continue;
-
-            let mealCopy = JSON.parse(JSON.stringify(mealBlueprint));
-            mealCopy.day = day; mealCopy.mIdx = mIdx;
-            
-            let cID = `d${day}_m${mIdx}`;
-            if (customFoods[cID]) {
-                let cfCopy = JSON.parse(JSON.stringify(customFoods[cID]));
-                cfCopy.forEach(cf => { cf.isCustom = true; });
-                mealCopy.ing = mealCopy.ing.concat(cfCopy);
+            // Ochrana pred zmazaním čísla
+            if (!val || val <= 0) {
+                document.getElementById(`goal-${type}`).value = GOALS[type];
+                return;
             }
 
-            mealCopy.cal = 0; mealCopy.pro = 0; mealCopy.carb = 0; mealCopy.fat = 0; mealCopy.fib = 0;
+            GOALS[type] = val;
 
-            mealCopy.ing.forEach((i, iIdx) => {
-                if(!i.isCustom) {
-                    
-                    // --- NOVÁ LOGIKA SWAPOV (Zámena surovín) ---
-                    let swapKey = `d${day}_m${mIdx}_i${iIdx}`;
-                    if (userSwaps[swapKey]) {
-                        let sd = userSwaps[swapKey];
-                        let newQtyGrams = i.cal > 0 ? (i.cal / sd.c) * 100 : 100; 
-                        
-                        i.text = `${newQtyGrams.toFixed(1)} g ${sd.n}`;
-                        i.pro = (newQtyGrams * sd.p / 100);
-                        i.carb = (newQtyGrams * sd.s / 100);
-                        i.fat = (newQtyGrams * sd.t / 100);
-                        i.fib = (newQtyGrams * sd.v / 100);
-                    }
-                    // ---------------------------------------------
+            // Zistíme pôvodný pomer sacharidov a tukov
+            let baseCarbCals = BASE_GOALS.carb * 4;
+            let baseFatCals = BASE_GOALS.fat * 9;
+            let flexRatio = baseCarbCals / (baseCarbCals + baseFatCals); 
 
-                    let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
-                    let effectiveRatio = rCal; // Záchranná sieť
-                    
-                    if(match) {
-                        let qty = parseFloat(match[1].replace(',', '.'));
-                        let unit = match[2];
-                        let name = match[3];
-                        let cat = getCategory(name);
-                        
-                        // ABSOLÚTNA KONTROLA NAD KATEGÓRIAMI
-                        let specificRatio = rCal;
-                        if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') specificRatio = rPro;
-                        else if (cat === '🍞 Prílohy a Pečivo') specificRatio = rCarb;
-                        else if (cat === '🥜 Tuky, Orechy a Semená') specificRatio = rFat;
-                        else if (cat === '🥦 Ovocie a Zelenina') specificRatio = rFib; // Zelenina poslúcha vlákninu
-
-                        let finalQty = qty * specificRatio;
-                        let lowerUnit = unit.toLowerCase();
-
-                        // Pekné zaokrúhľovanie
-                        if (lowerUnit === 'ks') {
-                            finalQty = Math.round(finalQty);
-                            if (finalQty === 0 && qty > 0) finalQty = 1;
-                        } else if (lowerUnit === 'g' || lowerUnit === 'ml') {
-                            finalQty = Math.round(finalQty);
-                        } else if (lowerUnit === 'čl' || lowerUnit === 'pl' || lowerUnit === 'hrsť') {
-                            finalQty = Math.round(finalQty * 2) / 2;
-                            if (finalQty === 0 && qty > 0) finalQty = 0.5;
-                        } else {
-                            finalQty = +(finalQty).toFixed(1);
-                        }
-
-                        effectiveRatio = qty > 0 ? (finalQty / qty) : 1;
-                        i.text = `${finalQty} ${unit} ${name}`;
-                    }
-                    
-                    // Aplikácia reálneho pomeru na surovinu
-                    i.cal = Math.round(i.cal * effectiveRatio);
-                    i.pro = Math.round(i.pro * effectiveRatio);
-                    i.carb = Math.round(i.carb * effectiveRatio);
-                    i.fat = Math.round(i.fat * effectiveRatio);
-                    i.fib = Math.round(i.fib * effectiveRatio);
-                }
-                
-                mealCopy.cal += i.cal; mealCopy.pro += i.pro; mealCopy.carb += i.carb; 
-                mealCopy.fat += i.fat; mealCopy.fib += i.fib;
-            });
+            // Fyzikálna kontrola: Len proteín má 4 kcal/g.
+            let minCalsRequired = (GOALS.pro * 4); 
             
-            currentMealPlan[day].push(mealCopy);
+            if (GOALS.cal < minCalsRequired) {
+                alert(`Fyziku neoklameš! Len samotné bielkoviny (${GOALS.pro}g) obsahujú ${minCalsRequired} kcal. Nastavujem kalórie na minimum.`);
+                GOALS.cal = minCalsRequired;
+            }
+
+            // Výpočet kalórií, ktoré nám zostali na voľné naloženie (Sacharidy a Tuky)
+            let remainingCals = GOALS.cal - (GOALS.pro * 4);
+
+            if (type === 'carb') {
+                remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.carb * 4);
+                if (remainingCals < 0) {
+                    GOALS.cal = (GOALS.pro * 4) + (GOALS.carb * 4);
+                    GOALS.fat = 0;
+                } else {
+                    GOALS.fat = Math.round(remainingCals / 9);
+                }
+            } else if (type === 'fat') {
+                remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.fat * 9);
+                if (remainingCals < 0) {
+                    GOALS.cal = (GOALS.pro * 4) + (GOALS.fat * 9);
+                    GOALS.carb = 0;
+                } else {
+                    GOALS.carb = Math.round(remainingCals / 4);
+                }
+            } else if (type === 'cal' || type === 'pro') {
+                let newCarbCals = remainingCals * flexRatio;
+                let newFatCals = remainingCals * (1 - flexRatio);
+                
+                GOALS.carb = Math.round(newCarbCals / 4);
+                GOALS.fat = Math.round(newFatCals / 9);
+            }
+
+            setInputsFromGoals();
+            localStorage.setItem('userGoals', JSON.stringify(GOALS));
+            
+            generateScaledPlan();
+            renderGrid();
+            updateAllDaySummaries();
+            
+            let modal = document.getElementById("mealModal");
+            if(modal && modal.classList.contains("active")) {
+                openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+            }
         }
-    }
-}
+
+        function generateScaledPlan() {
+            currentMealPlan = {};
+            
+            let rPro = GOALS.pro / BASE_GOALS.pro || 1;
+            let rCarb = GOALS.carb / BASE_GOALS.carb || 1;
+            let rFat = GOALS.fat / BASE_GOALS.fat || 1;
+            let rFib = GOALS.fib / BASE_GOALS.fib || 1;
+            let rCal = GOALS.cal / BASE_GOALS.cal || 1;
+
+            for (let day = 1; day <= 7; day++) {
+                currentMealPlan[day] = [];
+                
+                for (let mIdx = 0; mIdx <= 4; mIdx++) {
+                    let poolIdx = chosenMealsTimeline[day][mIdx];
+                    if(poolIdx === undefined) poolIdx = 0; 
+                    
+                    let mealBlueprint = pools[mIdx][poolIdx];
+                    if(!mealBlueprint) continue;
+
+                    let mealCopy = JSON.parse(JSON.stringify(mealBlueprint));
+                    mealCopy.day = day; mealCopy.mIdx = mIdx;
+                    
+                    let cID = `d${day}_m${mIdx}`;
+                    if (customFoods[cID]) {
+                        let cfCopy = JSON.parse(JSON.stringify(customFoods[cID]));
+                        cfCopy.forEach(cf => { cf.isCustom = true; });
+                        mealCopy.ing = mealCopy.ing.concat(cfCopy);
+                    }
+
+                    mealCopy.cal = 0; mealCopy.pro = 0; mealCopy.carb = 0; mealCopy.fat = 0; mealCopy.fib = 0;
+
+                    mealCopy.ing.forEach((i, iIdx) => {
+                        if(!i.isCustom) {
+                            
+                            // NOVÁ LOGIKA SWAPOV (Zámena surovín)
+                            let swapKey = `d${day}_m${mIdx}_i${iIdx}`;
+                            if (userSwaps[swapKey]) {
+                                let sd = userSwaps[swapKey];
+                                let newQtyGrams = i.cal > 0 ? (i.cal / sd.c) * 100 : 100; 
+                                
+                                i.text = `${newQtyGrams.toFixed(1)} g ${sd.n}`;
+                                i.pro = (newQtyGrams * sd.p / 100);
+                                i.carb = (newQtyGrams * sd.s / 100);
+                                i.fat = (newQtyGrams * sd.t / 100);
+                                i.fib = (newQtyGrams * sd.v / 100);
+                            }
+
+                            // Vylepšený, flexibilnejší REGEX na suroviny s voliteľnou medzerou
+                            let match = i.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                            let effectiveRatio = rCal; 
+                            
+                            if(match) {
+                                let qty = parseFloat(match[1].replace(',', '.'));
+                                let unit = match[2];
+                                let name = match[3];
+                                let cat = getCategory(name);
+                                
+                                let specificRatio = rCal;
+                                if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') specificRatio = rPro;
+                                else if (cat === '🍞 Prílohy a Pečivo') specificRatio = rCarb;
+                                else if (cat === '🥜 Tuky, Orechy a Semená') specificRatio = rFat;
+                                else if (cat === '🥦 Ovocie a Zelenina') specificRatio = rFib;
+
+                                let finalQty = qty * specificRatio;
+                                let lowerUnit = unit.toLowerCase();
+
+                                if (lowerUnit === 'ks') {
+                                    finalQty = Math.round(finalQty);
+                                    if (finalQty === 0 && qty > 0) finalQty = 1;
+                                } else if (lowerUnit === 'g' || lowerUnit === 'ml') {
+                                    finalQty = Math.round(finalQty);
+                                } else if (lowerUnit === 'čl' || lowerUnit === 'pl' || lowerUnit === 'hrsť') {
+                                    finalQty = Math.round(finalQty * 2) / 2;
+                                    if (finalQty === 0 && qty > 0) finalQty = 0.5;
+                                } else {
+                                    finalQty = +(finalQty).toFixed(1);
+                                }
+
+                                effectiveRatio = qty > 0 ? (finalQty / qty) : 1;
+                                i.text = `${finalQty} ${unit} ${name}`;
+                            }
+                            
+                            i.cal = Math.round(i.cal * effectiveRatio);
+                            i.pro = Math.round(i.pro * effectiveRatio);
+                            i.carb = Math.round(i.carb * effectiveRatio);
+                            i.fat = Math.round(i.fat * effectiveRatio);
+                            i.fib = Math.round(i.fib * effectiveRatio);
+                        }
+                        
+                        mealCopy.cal += i.cal; mealCopy.pro += i.pro; mealCopy.carb += i.carb; 
+                        mealCopy.fat += i.fat; mealCopy.fib += i.fib;
+                    });
+                    
+                    currentMealPlan[day].push(mealCopy);
+                }
+            }
+        }
 
         // --- 4. Vykresľovanie Rozhrania (Grid UI) ---
         function renderGrid() {
@@ -606,7 +625,6 @@ function generateScaledPlan() {
             const nazvyDni = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
             
             for (let day = 1; day <= 7; day++) {
-                // Bunka s názvom dňa + akciové ikonky pre celý deň
                 let dayCell = document.createElement("div");
                 dayCell.className = "day-label-box";
                 dayCell.innerHTML = `
@@ -618,7 +636,6 @@ function generateScaledPlan() {
                 `;
                 grid.appendChild(dayCell);
                 
-                // Bunky jednotlivých chodov dňa
                 currentMealPlan[day].forEach(meal => {
                     let cell = document.createElement("div");
                     cell.className = "meal-cell";
@@ -645,7 +662,6 @@ function generateScaledPlan() {
                     grid.appendChild(cell);
                 });
 
-                // Bunka súčtu
                 let summaryCell = document.createElement("div");
                 summaryCell.className = "summary-cell";
                 summaryCell.id = `summary_d${day}`;
@@ -722,10 +738,9 @@ function generateScaledPlan() {
             document.getElementById("btnEaten").className = "btn-status btn-eaten" + (status === 'eaten' ? " active" : "");
             document.getElementById("btnSkipped").className = "btn-status btn-skipped" + (status === 'skipped' ? " active" : "");
             
-            // Nastavenie modálnych tlačidiel reload a košík
             document.getElementById("mModalReload").onclick = () => {
                 reloadSingleMeal(meal.day, meal.mIdx, true);
-                openMealModal(currentMealPlan[meal.day][meal.mIdx]); // znovunavolenie
+                openMealModal(currentMealPlan[meal.day][meal.mIdx]); 
             };
             document.getElementById("mModalCart").onclick = () => {
                 addSingleMealToCart(meal.day, meal.mIdx);
@@ -743,7 +758,8 @@ function generateScaledPlan() {
                 let infoClass = isPurchased ? "ingredient-info purchased" : "ingredient-info";
                 let customTag = item.isCustom ? "<span style='font-size:0.7rem; background:#e7e5e4; padding:2px 6px; border-radius:4px; margin-left:5px;'>Vlastné</span>" : "";
 
-                let match = item.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                // Vylepšený REGEX
+                let match = item.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
                 let nameOnly = match ? match[3] : item.text;
 
                 let li = document.createElement("li");
@@ -855,7 +871,8 @@ function generateScaledPlan() {
 
         // --- 6. Logika Inteligentného Nákupného Zoznamu ---
         function extractKeyFromText(text) {
-            let match = text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+            // Vylepšený REGEX
+            let match = text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
             let unit = "", name = text;
             if(match) { unit = match[2]; name = match[3]; }
             return name.toLowerCase() + "|" + unit;
@@ -877,7 +894,7 @@ function generateScaledPlan() {
                 let parts = id.match(/d(\d+)_m(\d+)_i(\d+)/);
                 if(parts) {
                     let rawStr = currentMealPlan[parts[1]][parts[2]].ing[parts[3]].text; 
-                    let match = rawStr.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                    let match = rawStr.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
                     let qty = 1, unit = "", name = rawStr;
                     if(match) { qty = parseFloat(match[1].replace(',', '.')); unit = match[2]; name = match[3]; }
 
@@ -1031,85 +1048,96 @@ function generateScaledPlan() {
             overlay.addEventListener('click', function(e) { if(e.target === this) this.classList.remove("active"); });
         });
 
-// --- 7. INTELIGENTNÁ VÝMENA SUROVÍN (SWAP) ---
-let userSwaps = JSON.parse(localStorage.getItem('userSwaps')) || {};
+        // --- 7. INTELIGENTNÁ VÝMENA SUROVÍN (SWAP) ---
+        let userSwaps = JSON.parse(localStorage.getItem('userSwaps')) || {};
 
-const SWAP_DB = {
-    'ovocie': [
-        { n: 'Jablko', c: 52, p: 0.3, s: 14, t: 0.2, v: 2.4 }, { n: 'Banán', c: 89, p: 1.1, s: 23, t: 0.3, v: 2.6 },
-        { n: 'Čučoriedky', c: 57, p: 0.7, s: 14, t: 0.3, v: 2.4 }, { n: 'Jahody', c: 32, p: 0.7, s: 8, t: 0.3, v: 2 },
-        { n: 'Maliny', c: 52, p: 1.2, s: 12, t: 0.6, v: 6.5 }, { n: 'Figy', c: 74, p: 0.8, s: 19, t: 0.3, v: 2.9 }
-    ],
-    'zelenina': [
-        { n: 'Brokolica', c: 34, p: 2.8, s: 7, t: 0.4, v: 2.6 }, { n: 'Karfiol', c: 25, p: 1.9, s: 5, t: 0.3, v: 2 },
-        { n: 'Mrkva', c: 41, p: 0.9, s: 10, t: 0.2, v: 2.8 }, { n: 'Cuketa', c: 17, p: 1.2, s: 3, t: 0.3, v: 1 },
-        { n: 'Paradajky', c: 18, p: 0.9, s: 4, t: 0.2, v: 1.2 }, { n: 'Uhorka', c: 15, p: 0.7, s: 4, t: 0.1, v: 0.5 }
-    ],
-    'hydina': [
-        { n: 'Kuracie prsia', c: 110, p: 23, s: 0, t: 1.2, v: 0 }, { n: 'Morčacie prsia', c: 114, p: 24, s: 0, t: 1.5, v: 0 }
-    ],
-    'ryby': [
-        { n: 'Losos', c: 206, p: 22, s: 0, t: 13, v: 0 }, { n: 'Tuniak', c: 130, p: 28, s: 0, t: 1, v: 0 },
-        { n: 'Treska', c: 82, p: 18, s: 0, t: 0.7, v: 0 }
-    ],
-    'ryby_udene': [
-        { n: 'Údený losos', c: 117, p: 18, s: 0, t: 4.3, v: 0 }, { n: 'Údená makrela', c: 274, p: 19, s: 0, t: 22, v: 0 },
-        { n: 'Údený pstruh', c: 138, p: 25, s: 0, t: 4, v: 0 }
-    ],
-    'prilohy': [
-        { n: 'Ryža', c: 350, p: 7, s: 78, t: 0.5, v: 1.3 }, { n: 'Zemiaky', c: 77, p: 2, s: 17, t: 0.1, v: 2.2 },
-        { n: 'Cestoviny', c: 350, p: 12, s: 71, t: 1.5, v: 3 }, { n: 'Bataty', c: 86, p: 1.6, s: 20, t: 0.1, v: 3 },
-        { n: 'Kuskus', c: 376, p: 13, s: 77, t: 0.6, v: 5 }, { n: 'Bulgur', c: 342, p: 12, s: 76, t: 1.3, v: 18 }
-    ],
-    'vlocky': [
-        { n: 'Ovsené vločky', c: 389, p: 17, s: 66, t: 7, v: 10 }, { n: 'Špaldové vločky', c: 370, p: 14, s: 68, t: 3, v: 9 }
-    ],
-    'orechy': [
-        { n: 'Vlašské orechy', c: 654, p: 15, s: 14, t: 65, v: 7 }, { n: 'Mandle', c: 579, p: 21, s: 22, t: 50, v: 12 },
-        { n: 'Kešu', c: 553, p: 18, s: 30, t: 44, v: 3.3 }, { n: 'Lieskovce', c: 628, p: 15, s: 17, t: 61, v: 10 }
-    ],
-    'mliecne_huste': [
-        { n: 'Odtučnený tvaroh', c: 68, p: 12, s: 4, t: 0.5, v: 0 }, { n: 'Grécky jogurt 0%', c: 57, p: 10, s: 4, t: 0, v: 0 },
-        { n: 'Skyr', c: 62, p: 11, s: 4, t: 0.2, v: 0 }
-    ]
-};
+        const SWAP_DB = {
+            'ovocie': [
+                { n: 'Jablko', c: 52, p: 0.3, s: 14, t: 0.2, v: 2.4 }, { n: 'Banán', c: 89, p: 1.1, s: 23, t: 0.3, v: 2.6 },
+                { n: 'Čučoriedky', c: 57, p: 0.7, s: 14, t: 0.3, v: 2.4 }, { n: 'Jahody', c: 32, p: 0.7, s: 8, t: 0.3, v: 2 },
+                { n: 'Maliny', c: 52, p: 1.2, s: 12, t: 0.6, v: 6.5 }, { n: 'Figy', c: 74, p: 0.8, s: 19, t: 0.3, v: 2.9 }
+            ],
+            'zelenina': [
+                { n: 'Brokolica', c: 34, p: 2.8, s: 7, t: 0.4, v: 2.6 }, { n: 'Karfiol', c: 25, p: 1.9, s: 5, t: 0.3, v: 2 },
+                { n: 'Mrkva', c: 41, p: 0.9, s: 10, t: 0.2, v: 2.8 }, { n: 'Cuketa', c: 17, p: 1.2, s: 3, t: 0.3, v: 1 },
+                { n: 'Paradajky', c: 18, p: 0.9, s: 4, t: 0.2, v: 1.2 }, { n: 'Uhorka', c: 15, p: 0.7, s: 4, t: 0.1, v: 0.5 }
+            ],
+            'hydina': [
+                { n: 'Kuracie prsia', c: 110, p: 23, s: 0, t: 1.2, v: 0 }, { n: 'Morčacie prsia', c: 114, p: 24, s: 0, t: 1.5, v: 0 }
+            ],
+            'ryby': [
+                { n: 'Losos', c: 206, p: 22, s: 0, t: 13, v: 0 }, { n: 'Tuniak', c: 130, p: 28, s: 0, t: 1, v: 0 },
+                { n: 'Treska', c: 82, p: 18, s: 0, t: 0.7, v: 0 }
+            ],
+            'ryby_udene': [
+                { n: 'Údený losos', c: 117, p: 18, s: 0, t: 4.3, v: 0 }, { n: 'Údená makrela', c: 274, p: 19, s: 0, t: 22, v: 0 },
+                { n: 'Údený pstruh', c: 138, p: 25, s: 0, t: 4, v: 0 }
+            ],
+            'prilohy': [
+                { n: 'Ryža', c: 350, p: 7, s: 78, t: 0.5, v: 1.3 }, { n: 'Zemiaky', c: 77, p: 2, s: 17, t: 0.1, v: 2.2 },
+                { n: 'Cestoviny', c: 350, p: 12, s: 71, t: 1.5, v: 3 }, { n: 'Bataty', c: 86, p: 1.6, s: 20, t: 0.1, v: 3 },
+                { n: 'Kuskus', c: 376, p: 13, s: 77, t: 0.6, v: 5 }, { n: 'Bulgur', c: 342, p: 12, s: 76, t: 1.3, v: 18 }
+            ],
+            'vlocky': [
+                { n: 'Ovsené vločky', c: 389, p: 17, s: 66, t: 7, v: 10 }, { n: 'Špaldové vločky', c: 370, p: 14, s: 68, t: 3, v: 9 }
+            ],
+            'orechy': [
+                { n: 'Vlašské orechy', c: 654, p: 15, s: 14, t: 65, v: 7 }, { n: 'Mandle', c: 579, p: 21, s: 22, t: 50, v: 12 },
+                { n: 'Kešu', c: 553, p: 18, s: 30, t: 44, v: 3.3 }, { n: 'Lieskovce', c: 628, p: 15, s: 17, t: 61, v: 10 }
+            ],
+            'mliecne_huste': [
+                { n: 'Odtučnený tvaroh', c: 68, p: 12, s: 4, t: 0.5, v: 0 }, { n: 'Grécky jogurt 0%', c: 57, p: 10, s: 4, t: 0, v: 0 },
+                { n: 'Skyr', c: 62, p: 11, s: 4, t: 0.2, v: 0 }
+            ]
+        };
 
-function getSwapGroup(name) {
-    let n = name.toLowerCase();
-    if (n.match(/(losos|makrel|pstruh).*úden|úden.*(losos|makrel|pstruh)/)) return 'ryby_udene';
-    if (n.match(/(losos|tresk|tuniak|zubáč|kapor)/)) return 'ryby';
-    if (n.match(/(kurac|morčac)/)) return 'hydina';
-    if (n.match(/(jablk|banán|hrušk|čučoried|jahôd|malin|fig|mang|brosky|pomaranč|slivk)/)) return 'ovocie';
-    if (n.match(/(ryž|zemiak|batat|cestovin|kuskus|bulgur|pohánk|quino)/)) return 'prilohy';
-    if (n.match(/(vločk)/)) return 'vlocky';
-    if (n.match(/(orech|mandl|kešu|arašid|lieskov)/)) return 'orechy';
-    if (n.match(/(brokolic|karfiol|mrkv|cuket|paradaj|uhork|paprik|šalát|špenát)/)) return 'zelenina';
-    if (n.match(/(tvaroh|skyr|gréck.*jogurt)/)) return 'mliecne_huste';
-    return null;
-}
+        function getSwapGroup(name) {
+            let n = name.toLowerCase();
+            if (n.match(/(losos|makrel|pstruh).*úden|úden.*(losos|makrel|pstruh)/)) return 'ryby_udene';
+            if (n.match(/(losos|tresk|tuniak|zubáč|kapor)/)) return 'ryby';
+            if (n.match(/(kurac|morčac)/)) return 'hydina';
+            if (n.match(/(jablk|banán|hrušk|čučoried|jahôd|malin|fig|mang|brosky|pomaranč|slivk)/)) return 'ovocie';
+            if (n.match(/(ryž|zemiak|batat|cestovin|kuskus|bulgur|pohánk|quino)/)) return 'prilohy';
+            if (n.match(/(vločk)/)) return 'vlocky';
+            if (n.match(/(orech|mandl|kešu|arašid|lieskov)/)) return 'orechy';
+            if (n.match(/(brokolic|karfiol|mrkv|cuket|paradaj|uhork|paprik|šalát|špenát)/)) return 'zelenina';
+            if (n.match(/(tvaroh|skyr|gréck.*jogurt)/)) return 'mliecne_huste';
+            return null;
+        }
 
-function swapIngredient(day, mIdx, iIdx, name) {
-    let group = getSwapGroup(name);
-    if (!group) {
-        alert("Pre túto konkrétnu surovinu zatiaľ nemáme v databáze vhodnú alternatívu.");
-        return;
-    }
-    
-    let options = SWAP_DB[group];
-    let validOptions = options.filter(opt => !name.toLowerCase().includes(opt.n.toLowerCase()));
-    if (validOptions.length === 0) validOptions = options;
-    
-    let randomChoice = validOptions[Math.floor(Math.random() * validOptions.length)];
-    
-    let swapKey = `d${day}_m${mIdx}_i${iIdx}`;
-    userSwaps[swapKey] = randomChoice;
-    localStorage.setItem('userSwaps', JSON.stringify(userSwaps));
-    
-    generateScaledPlan();
-    renderGrid();
-    updateAllDaySummaries();
-    openMealModal(currentMealPlan[day][mIdx]);
-}
+        function swapIngredient(day, mIdx, iIdx, name) {
+            let group = getSwapGroup(name);
+            if (!group) {
+                alert("Pre túto konkrétnu surovinu zatiaľ nemáme v databáze vhodnú alternatívu.");
+                return;
+            }
+            
+            let options = SWAP_DB[group];
+            let validOptions = options.filter(opt => !name.toLowerCase().includes(opt.n.toLowerCase()));
+            if (validOptions.length === 0) validOptions = options;
+            
+            let randomChoice = validOptions[Math.floor(Math.random() * validOptions.length)];
+            
+            let swapKey = `d${day}_m${mIdx}_i${iIdx}`;
+            userSwaps[swapKey] = randomChoice;
+            localStorage.setItem('userSwaps', JSON.stringify(userSwaps));
+            
+            generateScaledPlan();
+            renderGrid();
+            updateAllDaySummaries();
+            openMealModal(currentMealPlan[day][mIdx]);
+        }
+
+        // --- REGISTRÁCIA PWA SERVICE WORKERA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('Service Worker úspešne zaregistrovaný!', reg);
+                }).catch(err => {
+                    console.log('Registrácia Service Workera zlyhala: ', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
