@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Môj Inteligentný Jedálniček</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #f97316; 
+            --primary-light: #ffedd5; 
+            --secondary: #84cc16; 
+            --secondary-light: #ecfccb;
+            --blue-light: #e0f2fe;
+            --blue-main: #0284c7;
+            --yellow-light: #fef08a;
+            --yellow-main: #ca8a04;
+            --bg: #fdf5e6; 
+            --surface: #fffefc; 
+            --text-main: #292524; 
+            --text-muted: #78716c; 
+            --border: #e7e5e4; 
+            
+            --shadow-card: 0 4px 15px rgba(67, 40, 16, 0.05);
+            --shadow-hover: 0 10px 25px rgba(67, 40, 16, 0.09);
+            --shadow-modal: 0 25px 50px -12px rgba(67, 40, 16, 0.15);
+            --radius-sm: 12px;
+            --radius-lg: 24px;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); padding: 40px 20px; line-height: 1.6; padding-bottom: 120px;}
+        
+        .header-container { text-align: center; margin-bottom: 40px; }
+        h1 { font-size: 2.5rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.03em; margin-bottom: 8px;}
+        
+        /* Interaktívna Legenda / Ciele */
+        .legend-container { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+        .legend-input-group {
+            display: inline-flex; align-items: center; background: var(--secondary-light); padding: 8px 16px;
+            border-radius: 20px; border: 1px dashed transparent; box-shadow: var(--shadow-card);
+            font-size: 0.95rem; font-weight: 600; color: #4d7c0f; gap: 5px; transition: 0.2s;
+        }
+        .legend-input-group:focus-within { background: var(--primary-light); color: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
+        .legend-input {
+            border: none; background: transparent; width: 60px; font-weight: 700; font-family: inherit;
+            color: inherit; text-align: center; outline: none; -moz-appearance: textfield;
+            font-size: 1.05rem; border-bottom: 2px dashed rgba(77, 124, 15, 0.4); transition: 0.2s; cursor: pointer;
+        }
+        .legend-input::-webkit-outer-spin-button, .legend-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .legend-input-group:focus-within .legend-input { border-bottom-color: var(--primary); cursor: text;}
+        .legend-hint { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; font-style: italic;}
+
+        .schedule-container { max-width: 1450px; margin: 0 auto; overflow-x: auto; padding-bottom: 20px;}
+        .grid-table { display: grid; grid-template-columns: 90px repeat(5, minmax(210px, 1fr)) minmax(250px, 1fr); gap: 15px; min-width: 1300px; }
+        
+        .col-header { font-weight: 600; text-transform: uppercase; font-size: 0.8rem; color: var(--text-muted); text-align: left; padding: 0 10px 10px; border-bottom: 2px solid var(--border); margin-bottom: 10px;}
+        .col-header.empty { border: none; }
+        .col-header.summary { color: var(--primary); border-bottom-color: var(--primary-light); }
+        .day-label { font-weight: 700; color: var(--text-main); font-size: 1.1rem; display: flex; align-items: center; padding-right: 10px; }
+        
+        .meal-cell { background: var(--surface); border-radius: var(--radius-sm); padding: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--shadow-card); border: 1px solid rgba(231, 229, 228, 0.6); display: flex; flex-direction: column; justify-content: center;}
+        .meal-cell:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--primary-light); }
+        .meal-cell-title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); margin-bottom: 4px;}
+        .meal-cell-macros { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .summary-cell { background: linear-gradient(145deg, #fff7ed, #fffefc); border: 2px dashed var(--primary-light); border-radius: var(--radius-sm); padding: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--shadow-card); }
+        .summary-cell:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); background: #ffedd5; border-color: var(--primary); }
+        .summary-title { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid var(--primary-light); padding-bottom: 5px;}
+        
+        /* Inline Progress Bar */
+        .macro-progress-text { position: relative; display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px; padding: 4px 8px; border-radius: 6px; background: #f5f5f4; overflow: hidden; z-index: 1; }
+        .mpt-fill { position: absolute; top: 0; left: 0; height: 100%; z-index: -1; transition: width 0.5s ease; }
+        .mpt-label { font-weight: 600; color: var(--text-main); }
+        .mpt-value { font-weight: 500; color: var(--text-main); }
+        
+        .meal-eaten { background-color: #dcfce7 !important; border-color: #bbf7d0 !important; }
+        .meal-skipped { background-color: #fee2e2 !important; border-color: #fecaca !important; opacity: 0.7; }
+        
+        /* Modálne Okná */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(41, 37, 36, 0.6); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s ease; z-index: 1000; padding: 20px; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--surface); width: 100%; max-width: 600px; border-radius: var(--radius-lg); padding: 40px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-modal); transform: scale(0.95) translateY(10px); transition: 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        
+        .close-btn { position: absolute; top: 20px; right: 20px; background: #f5f5f4; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 22px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .close-btn:hover { background: #e7e5e4; color: var(--text-main); }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px;}
+        .modal-header h2 { font-size: 1.8rem; font-weight: 700; color: var(--text-main); padding-right: 20px; line-height: 1.2;}
+        .macros { display: flex; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+        .macro-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .bg-cal { background: var(--primary-light); color: #c2410c; }
+        .bg-pro { background: var(--secondary-light); color: #4d7c0f; }
+        .bg-carb { background: var(--blue-light); color: var(--blue-main); }
+        .bg-fat { background: var(--yellow-light); color: var(--yellow-main); }
+        .bg-fib { background: #f5f5f4; color: #57534e; }
+        
+        .action-bar { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .btn-status { flex: 1; padding: 12px; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.95rem; min-width: 140px;}
+        .btn-eaten { background: #f5f5f4; color: #16a34a; }
+        .btn-eaten.active { background: #16a34a; color: white; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); }
+        .btn-skipped { background: #f5f5f4; color: #ef4444; }
+        .btn-skipped.active { background: #ef4444; color: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
+        
+        .btn-cart-action { width: 100%; padding: 12px; background: #fff7ed; color: var(--primary); border: 1px dashed var(--primary); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .btn-cart-action:hover { background: var(--primary-light); }
+
+        h3 { font-size: 1.1rem; font-weight: 600; margin: 30px 0 15px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center;}
+        
+        ul.ingredients { list-style: none; margin-bottom: 20px;}
+        ul.ingredients li { display: flex; align-items: flex-start; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f5f5f4; }
+        
+        .checkbox-wrapper { display: flex; align-items: flex-start; cursor: pointer; width: 100%;}
+        .checkbox-wrapper input[type="checkbox"] { display: none; }
+        .checkmark { width: 22px; height: 22px; border: 2px solid #d6d3d1; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; margin-top: 2px; margin-right: 15px;}
+        .checkbox-wrapper input[type="checkbox"]:checked + .checkmark { background-color: var(--primary); border-color: var(--primary); }
+        .checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after { content: "✓"; color: white; font-size: 13px; font-weight: bold; }
+        
+        .ingredient-info { flex: 1; transition: 0.2s; }
+        .ingredient-text { color: var(--text-main); font-weight: 500; font-size: 0.95rem; display: block; line-height: 1.3;}
+        .ingredient-macro-detail { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;}
+        
+        .ingredient-info.purchased { opacity: 0.5; text-decoration: line-through; }
+        
+        .custom-food-container { background: #fafaf9; border: 1px dashed #d6d3d1; border-radius: var(--radius-sm); padding: 20px; margin-top: 20px; }
+        .cf-title { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 15px;}
+        .cf-input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;}
+        .cf-input { padding: 10px 12px; border: 1px solid #d6d3d1; border-radius: 8px; font-size: 0.9rem; outline: none; width: 100%; background: white; }
+        .cf-input:focus { border-color: var(--primary); }
+        .cf-macro-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .cf-macro-input { text-align: center; }
+        .btn-add-custom { background: var(--text-main); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%;}
+        .btn-add-custom:hover { background: #000; }
+
+        p.steps { font-size: 0.95rem; color: var(--text-main); white-space: pre-line; line-height: 1.8; background: #fafaf9; padding: 25px; border-radius: var(--radius-sm); border-left: 4px solid var(--secondary); margin-top: 10px;}
+        
+        .summary-chart-container { background: #fafaf9; padding: 25px; border-radius: var(--radius-sm); margin-bottom: 20px; border: 1px solid var(--border);}
+        .big-progress-row { margin-bottom: 15px; }
+        .big-progress-row:last-child { margin-bottom: 0; }
+        .bp-header { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+        .bp-val { color: var(--text-muted); font-size: 0.8rem; font-weight: 500;}
+        .bp-bar { width: 100%; height: 10px; background: #e7e5e4; border-radius: 5px; overflow: hidden; }
+        .bp-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
+        
+        .floating-cart { position: fixed; bottom: 30px; right: 30px; background: var(--surface); color: var(--text-main); padding: 16px 24px; border-radius: 50px; font-weight: 600; cursor: pointer; box-shadow: 0 10px 25px rgba(67, 40, 16, 0.1); z-index: 900; border: 1px solid var(--border); font-size: 1rem; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
+        .floating-cart:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(67, 40, 16, 0.15); border-color: var(--primary-light); }
+        .cart-badge { background: var(--primary); color: white; border-radius: 50%; min-width: 28px; height: 28px; padding: 0 8px; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        
+        .cart-items-container { background: #fafaf9; padding: 15px; border-radius: var(--radius-sm); margin-bottom: 25px; max-height: 50vh; overflow-y: auto;}
+        .empty-cart-msg { text-align: center; color: var(--text-muted); padding: 30px 10px; font-style: italic; }
+        
+        .btn-danger { width: 100%; padding: 12px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; background: white; color: #ef4444; border: 1px solid #fca5a5; }
+        .btn-danger:hover { background: #fef2f2; }
+        
+        .select-sort { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-family: inherit; font-size: 0.85rem; outline: none; cursor: pointer; background: white; color: var(--text-main); font-weight: 500;}
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>Inteligentný Jedálniček</h1>
+        
+        <div class="legend-container">
+            <div class="legend-input-group" title="Zmeň cieľ Kalórií">
+                🔥 <input type="number" id="goal-cal" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('cal')"> kcal
+            </div>
+            <div class="legend-input-group" title="Zmeň cieľ Bielkovín">
+                🥩 <input type="number" id="goal-pro" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('pro')"> g Pro
+            </div>
+            <div class="legend-input-group" title="Zmeň cieľ Sacharidov">
+                🍞 <input type="number" id="goal-carb" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('carb')"> g Sac
+            </div>
+            <div class="legend-input-group" title="Zmeň cieľ Tukov">
+                🥑 <input type="number" id="goal-fat" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fat')"> g Tuk
+            </div>
+            <div class="legend-input-group" title="Zmeň cieľ Vlákniny">
+                🌾 <input type="number" id="goal-fib" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fib')"> g Vlák
+            </div>
+        </div>
+        <span class="legend-hint">👆 Klikni na ktorékoľvek číslo a prepíš ho. Všetky ostatné makrá a porcie sa automaticky prepočítajú a prispôsobia novému cieľu.</span>
+    </div>
+
+    <div class="schedule-container">
+        <div class="grid-table" id="scheduleGrid">
+            </div>
+    </div>
+
+    <button class="floating-cart" onclick="openCart()">
+        🛒 Nákup <span class="cart-badge" id="cartCount">0</span>
+    </button>
+
+    <div class="modal-overlay" id="mealModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('mealModal')">✕</button>
+            <div class="modal-header" style="display:block;">
+                <h2 id="mTitle">Názov jedla</h2>
+                <div class="macros" id="mMacros"></div>
+            </div>
+            
+            <div class="action-bar">
+                <button id="btnEaten" class="btn-status btn-eaten" onclick="setMealStatus('eaten')">✓ Zjedol som</button>
+                <button id="btnSkipped" class="btn-status btn-skipped" onclick="setMealStatus('skipped')">✗ Nezjedol som</button>
+            </div>
+            
+            <button class="btn-cart-action" onclick="addWholeMealToCart()">🛒 Pridať celé jedlo do nákupu</button>
+
+            <h3>Suroviny</h3>
+            <ul class="ingredients" id="mIngredients"></ul>
+            
+            <div class="custom-food-container">
+                <div class="cf-title">➕ Pridať vlastnú surovinu k jedlu</div>
+                <div class="cf-input-group">
+                    <input type="text" id="cfName" class="cf-input" placeholder="Názov (napr. Čokoláda 50g)">
+                    <div class="cf-macro-row">
+                        <input type="number" id="cfCal" class="cf-input cf-macro-input" placeholder="Kcal">
+                        <input type="number" id="cfPro" class="cf-input cf-macro-input" placeholder="Pro">
+                        <input type="number" id="cfCarb" class="cf-input cf-macro-input" placeholder="Sac">
+                        <input type="number" id="cfFat" class="cf-input cf-macro-input" placeholder="Tuk">
+                        <input type="number" id="cfFib" class="cf-input cf-macro-input" placeholder="Vlák">
+                    </div>
+                </div>
+                <button class="btn-add-custom" onclick="addCustomFood()">Pridať do jedla</button>
+            </div>
+
+            <h3 style="margin-top: 35px;">Postup prípravy</h3>
+            <p class="steps" id="mSteps"></p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="summaryModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('summaryModal')">✕</button>
+            <div class="modal-header" style="display:block;">
+                <h2 id="sTitle">Prehľad dňa</h2>
+            </div>
+            
+            <div class="summary-chart-container" id="sCharts"></div>
+            
+            <button class="btn-cart-action" style="margin-bottom: 25px;" onclick="addWholeDayToCart()">🛒 Pridať celý tento deň do nákupu</button>
+            
+            <h3>Zjedené chody</h3>
+            <ul class="ingredients" id="sEatenMeals" style="background: transparent; border:none; padding:0;"></ul>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="cartModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('cartModal')">✕</button>
+            <div class="modal-header">
+                <h2 style="margin: 0;">Nákup</h2>
+                <select id="cartSort" class="select-sort" onchange="openCart()">
+                    <option value="name">Podľa názvu</option>
+                    <option value="qty">Podľa gramov</option>
+                    <option value="cat">Podľa kategórie</option>
+                </select>
+            </div>
+            
+            <button class="btn-cart-action" style="margin-bottom: 20px; background: var(--primary); color: white; border: none;" onclick="addWholeWeekToCart()">🛒 Pridať úplne všetky jedlá z týždňa</button>
+            
+            <div class="cart-items-container" id="cartContent"></div>
+            <button class="btn-danger" onclick="clearCart()">Vymazať zoznam a začať odznova</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Nastavenia a Dáta ---
+        // Pevné základy podľa ktorých vypočítavame nové pomery
+        const BASE_GOALS = { cal: 1700, pro: 80, carb: 180, fat: 55, fib: 30 };
+        
+        // Aktuálne ciele používateľa
+        let GOALS = JSON.parse(localStorage.getItem('userGoals')) || { cal: 1700, pro: 80, carb: 180, fat: 55, fib: 30 };
+
+        const BASE_MEAL_PLAN = {
+            1: [
+                { title: "🥣 Ovsená kaša s chia", steps: "1. Vločky zalej teplým mliekom.\n2. Pridaj chia semienka a premiešaj.\n3. Nechaj 5 minút postáť a posyp čučoriedkami.", ing: [
+                    { text: "50 g ovsených vločiek", cal: 185, pro: 7, carb: 30, fat: 3, fib: 5 },
+                    { text: "150 ml polotučného mlieka", cal: 70, pro: 5, carb: 7, fat: 2, fib: 0 },
+                    { text: "15 g chia semienok", cal: 70, pro: 3, carb: 1, fat: 5, fib: 5 },
+                    { text: "100 g čučoriedok", cal: 45, pro: 1, carb: 12, fat: 0, fib: 2 }
+                ]},
+                { title: "🍎 Jablko a mandle", steps: "1. Umy jablko a zjedz s orieškami.", ing: [
+                    { text: "150 g jablka", cal: 80, pro: 0, carb: 20, fat: 0, fib: 4 },
+                    { text: "20 g mandlí", cal: 115, pro: 4, carb: 4, fat: 10, fib: 2 }
+                ]},
+                { title: "🍗 Kuracie s quinou", steps: "1. Quinou uvar podľa návodu.\n2. Mäso osoľ, okoreň a opeč na oleji.\n3. Brokolicu uvar v pare a podávaj spolu.", ing: [
+                    { text: "130 g kuracích pŕs", cal: 140, pro: 30, carb: 0, fat: 2, fib: 0 },
+                    { text: "60 g quinoi", cal: 220, pro: 8, carb: 38, fat: 4, fib: 4 },
+                    { text: "150 g brokolice", cal: 50, pro: 4, carb: 10, fat: 0, fib: 4 },
+                    { text: "5 g olivového oleja", cal: 45, pro: 0, carb: 0, fat: 5, fib: 0 }
+                ]},
+                { title: "🥛 Jogurt s orechmi", steps: "1. Zmiešaj v miske.", ing: [
+                    { text: "150 g gréckeho jogurtu", cal: 85, pro: 15, carb: 6, fat: 0, fib: 0 },
+                    { text: "10 g vlašských orechov", cal: 65, pro: 1, carb: 1, fat: 6, fib: 1 }
+                ]},
+                { title: "🍲 Šošovicový prívarok", steps: "1. Šošovicu uvar domäkka.\n2. Priprav vajíčko.\n3. Podávaj s krajcom chleba.", ing: [
+                    { text: "60 g červenej šošovice", cal: 210, pro: 15, carb: 35, fat: 1, fib: 18 },
+                    { text: "1 ks vajca", cal: 70, pro: 6, carb: 0, fat: 5, fib: 0 },
+                    { text: "35 g celozrnného chleba", cal: 90, pro: 3, carb: 16, fat: 1, fib: 3 }
+                ]}
+            ],
+            2: [
+                { title: "🥪 Cottage chlieb", steps: "1. Chlieb natri syrom, oblož zeleninou.", ing: [
+                    { text: "70 g celozrnného chleba", cal: 180, pro: 6, carb: 32, fat: 2, fib: 6 },
+                    { text: "100 g cottage cheese", cal: 100, pro: 12, carb: 4, fat: 4, fib: 0 },
+                    { text: "100 g paradajky", cal: 20, pro: 1, carb: 4, fat: 0, fib: 1 },
+                    { text: "20 g rukoly", cal: 5, pro: 1, carb: 1, fat: 0, fib: 1 }
+                ]},
+                { title: "🍌 Banán s maslom", steps: "1. Banán nakrájaj na kolieska a potri maslom.", ing: [
+                    { text: "120 g banánu", cal: 105, pro: 1, carb: 27, fat: 0, fib: 3 },
+                    { text: "15 g arašidového masla", cal: 90, pro: 4, carb: 3, fat: 8, fib: 1 }
+                ]},
+                { title: "🥢 Tofu stir-fry", steps: "1. Ryžu uvar.\n2. Tofu a zeleninu opeč na oleji.", ing: [
+                    { text: "100 g bieleho tofu", cal: 130, pro: 12, carb: 2, fat: 8, fib: 1 },
+                    { text: "200 g zeleniny mix", cal: 60, pro: 3, carb: 12, fat: 0, fib: 5 },
+                    { text: "10 g sezamového oleja", cal: 90, pro: 0, carb: 0, fat: 10, fib: 0 },
+                    { text: "60 g hnedej ryže", cal: 220, pro: 5, carb: 45, fat: 2, fib: 2 }
+                ]},
+                { title: "🍐 Kefír a hruška", steps: "1. Vypi a zjedz.", ing: [
+                    { text: "250 ml kefíru", cal: 100, pro: 8, carb: 10, fat: 3, fib: 0 },
+                    { text: "150 g hrušky", cal: 85, pro: 1, carb: 23, fat: 0, fib: 5 }
+                ]},
+                { title: "🐟 Losos a fazuľky", steps: "1. Lososa a bataty upeč v rúre.\n2. Fazuľky krátko povar.", ing: [
+                    { text: "120 g čerstvého lososa", cal: 250, pro: 24, carb: 0, fat: 16, fib: 0 },
+                    { text: "200 g batatov", cal: 170, pro: 3, carb: 40, fat: 0, fib: 6 },
+                    { text: "150 g zelených fazuliek", cal: 45, pro: 3, carb: 10, fat: 0, fib: 4 }
+                ]}
+            ],
+            3: [
+                { title: "🍳 Praženica so špenátom", steps: "1. Urob praženicu so špenátom.\n2. Podávaj s chlebom.", ing: [
+                    { text: "2 ks vajec", cal: 140, pro: 12, carb: 0, fat: 10, fib: 0 },
+                    { text: "5 g masla", cal: 35, pro: 0, carb: 0, fat: 4, fib: 0 },
+                    { text: "35 g celozrnného chleba", cal: 90, pro: 3, carb: 16, fat: 1, fib: 3 },
+                    { text: "50 g špenátu", cal: 10, pro: 1, carb: 2, fat: 0, fib: 1 },
+                    { text: "100 g papriky", cal: 30, pro: 1, carb: 6, fat: 0, fib: 2 }
+                ]},
+                { title: "🍓 Maliny s orechmi", steps: "1. Zjedz ako rýchly snack.", ing: [
+                    { text: "25 g vlašských orechov", cal: 160, pro: 4, carb: 3, fat: 16, fib: 2 },
+                    { text: "100 g malín", cal: 50, pro: 1, carb: 12, fat: 1, fib: 7 }
+                ]},
+                { title: "🍝 Hovädzie cestoviny", steps: "1. Cestoviny uvar.\n2. Mäso opeč, zalej paradajkami.", ing: [
+                    { text: "70 g celozrnných cestovín", cal: 245, pro: 10, carb: 50, fat: 2, fib: 6 },
+                    { text: "100 g mletého hovädzieho", cal: 150, pro: 21, carb: 0, fat: 7, fib: 0 },
+                    { text: "150 ml pasírovaných paradajok", cal: 45, pro: 2, carb: 9, fat: 0, fib: 2 }
+                ]},
+                { title: "🥕 Mrkva s hummusom", steps: "1. Mrkvu namáčaj do hummusu.", ing: [
+                    { text: "100 g mrkvy", cal: 40, pro: 1, carb: 10, fat: 0, fib: 3 },
+                    { text: "50 g cícerového hummusu", cal: 130, pro: 4, carb: 10, fat: 9, fib: 3 }
+                ]},
+                { title: "🥗 Šalát s cícerom", steps: "1. Všetko zmiešaj a pokvapkaj olejom.", ing: [
+                    { text: "100 g uvareného cíceru", cal: 160, pro: 9, carb: 27, fat: 3, fib: 8 },
+                    { text: "30 g balkánskeho syra", cal: 80, pro: 4, carb: 1, fat: 7, fib: 0 },
+                    { text: "10 g olivového oleja", cal: 90, pro: 0, carb: 0, fat: 10, fib: 0 },
+                    { text: "10 g tekvicových semienok", cal: 55, pro: 3, carb: 1, fat: 5, fib: 1 },
+                    { text: "100 g listovej zeleniny", cal: 15, pro: 1, carb: 3, fat: 0, fib: 2 }
+                ]}
+            ],
+            4: [
+                { title: "🥤 Sýte smoothie", steps: "1. Všetko rozmixuj.", ing: [
+                    { text: "30 g proteínu", cal: 115, pro: 24, carb: 2, fat: 1, fib: 0 },
+                    { text: "120 g banánu", cal: 105, pro: 1, carb: 27, fat: 0, fib: 3 },
+                    { text: "50 g špenátu", cal: 10, pro: 1, carb: 2, fat: 0, fib: 1 },
+                    { text: "15 g ľanových semienok", cal: 80, pro: 3, carb: 4, fat: 6, fib: 4 },
+                    { text: "200 ml mandľového mlieka", cal: 30, pro: 1, carb: 3, fat: 2, fib: 1 }
+                ]},
+                { title: "🍯 Tvaroh s medom", steps: "1. Tvaroh polej medom.", ing: [
+                    { text: "125 g tvarohu", cal: 100, pro: 16, carb: 4, fat: 2, fib: 0 },
+                    { text: "10 g medu", cal: 30, pro: 0, carb: 8, fat: 0, fib: 0 }
+                ]},
+                { title: "🥩 Bravčové na prírodno", steps: "1. Mäso opeč z oboch strán.\n2. Podávaj so zemiakmi a šalátom.", ing: [
+                    { text: "120 g bravčového karé", cal: 170, pro: 26, carb: 0, fat: 7, fib: 0 },
+                    { text: "250 g varených zemiakov", cal: 180, pro: 4, carb: 40, fat: 0, fib: 4 },
+                    { text: "150 g kapustového šalátu", cal: 60, pro: 2, carb: 12, fat: 0, fib: 4 },
+                    { text: "5 g olivového oleja", cal: 45, pro: 0, carb: 0, fat: 5, fib: 0 }
+                ]},
+                { title: "🍏 Jablko a mandle", steps: "1. Rýchly snack.", ing: [
+                    { text: "150 g jablka", cal: 80, pro: 0, carb: 20, fat: 0, fib: 4 },
+                    { text: "20 g mandlí", cal: 115, pro: 4, carb: 4, fat: 10, fib: 2 }
+                ]},
+                { title: "🌯 Fazuľové burrito", steps: "1. Tortilu naplň a zabaľ.", ing: [
+                    { text: "1 ks celozrnnej tortily", cal: 180, pro: 5, carb: 30, fat: 4, fib: 4 },
+                    { text: "100 g červenej fazule", cal: 110, pro: 8, carb: 20, fat: 1, fib: 7 },
+                    { text: "30 g kukurice", cal: 30, pro: 1, carb: 7, fat: 0, fib: 1 },
+                    { text: "30 g čiernych olív", cal: 35, pro: 0, carb: 2, fat: 3, fib: 1 },
+                    { text: "100 g listovej zeleniny", cal: 15, pro: 1, carb: 3, fat: 0, fib: 2 }
+                ]}
+            ],
+            5: [
+                { title: "🥣 Pohánková kaša", steps: "1. Pohánku uvar domäkka.\n2. Pridaj jablko a orechy.", ing: [
+                    { text: "50 g pohánky", cal: 170, pro: 6, carb: 35, fat: 1, fib: 5 },
+                    { text: "100 g jablka", cal: 50, pro: 0, carb: 14, fat: 0, fib: 2 },
+                    { text: "1 g škorice", cal: 5, pro: 0, carb: 1, fat: 0, fib: 1 },
+                    { text: "15 g vlašských orechov", cal: 100, pro: 2, carb: 2, fat: 10, fib: 1 }
+                ]},
+                { title: "🫐 Jogurt a čučoriedky", steps: "1. Zmiešaj v miske.", ing: [
+                    { text: "150 g gréckeho jogurtu", cal: 85, pro: 15, carb: 6, fat: 0, fib: 0 },
+                    { text: "100 g čučoriedok", cal: 45, pro: 1, carb: 12, fat: 0, fib: 2 }
+                ]},
+                { title: "🍗 Kuracie a mrkva", steps: "1. Mäso a mrkvu upeč.\n2. Bulgur uvar.", ing: [
+                    { text: "130 g kuracieho stehna", cal: 160, pro: 25, carb: 0, fat: 7, fib: 0 },
+                    { text: "60 g bulguru", cal: 200, pro: 7, carb: 45, fat: 1, fib: 5 },
+                    { text: "150 g mrkvy", cal: 60, pro: 1, carb: 14, fat: 0, fib: 4 }
+                ]},
+                { title: "🍘 Knäckebrot a maslo", steps: "1. Natri a zjedz.", ing: [
+                    { text: "20 g knäckebrotu", cal: 70, pro: 2, carb: 14, fat: 1, fib: 3 },
+                    { text: "30 g arašidového masla", cal: 180, pro: 8, carb: 6, fat: 15, fib: 2 }
+                ]},
+                { title: "🥗 Tuniakový šalát", steps: "1. Všetko zmiešaj a podávaj s chlebom.", ing: [
+                    { text: "120 g tuniaka", cal: 130, pro: 28, carb: 0, fat: 1, fib: 0 },
+                    { text: "1 ks vajca", cal: 70, pro: 6, carb: 0, fat: 5, fib: 0 },
+                    { text: "100 g listovej zeleniny", cal: 15, pro: 1, carb: 3, fat: 0, fib: 2 },
+                    { text: "100 g cherry paradajok", cal: 20, pro: 1, carb: 4, fat: 0, fib: 1 },
+                    { text: "10 g olivového oleja", cal: 90, pro: 0, carb: 0, fat: 10, fib: 0 },
+                    { text: "35 g celozrnného chleba", cal: 90, pro: 3, carb: 16, fat: 1, fib: 3 }
+                ]}
+            ],
+            6: [
+                { title: "🥪 Nátierka s lososom", steps: "1. Chlieb natri syrom a oblož lososom.", ing: [
+                    { text: "70 g celozrnného chleba", cal: 180, pro: 6, carb: 32, fat: 2, fib: 6 },
+                    { text: "50 g krémového syra", cal: 100, pro: 4, carb: 2, fat: 9, fib: 0 },
+                    { text: "30 g údeného lososa", cal: 50, pro: 7, carb: 0, fat: 3, fib: 0 }
+                ]},
+                { title: "🍊 Pomaranč a mandle", steps: "1. Rýchly snack.", ing: [
+                    { text: "150 g pomaranča", cal: 70, pro: 1, carb: 18, fat: 0, fib: 3 },
+                    { text: "15 g mandlí", cal: 90, pro: 3, carb: 3, fat: 8, fib: 2 }
+                ]},
+                { title: "🦃 Morčacie s tarhoňou", steps: "1. Tarhoňu uvar.\n2. Mäso so šampiňónmi orestuj na oleji.", ing: [
+                    { text: "130 g morčacích pŕs", cal: 135, pro: 31, carb: 0, fat: 1, fib: 0 },
+                    { text: "150 g šampiňónov", cal: 35, pro: 5, carb: 5, fat: 0, fib: 2 },
+                    { text: "10 g olivového oleja", cal: 90, pro: 0, carb: 0, fat: 10, fib: 0 },
+                    { text: "50 g celozrnnej tarhone", cal: 180, pro: 6, carb: 35, fat: 1, fib: 4 },
+                    { text: "100 g uhorky", cal: 15, pro: 1, carb: 3, fat: 0, fib: 1 }
+                ]},
+                { title: "🍧 Skyr s malinami", steps: "1. Zmiešaj v miske.", ing: [
+                    { text: "150 g skyru", cal: 90, pro: 16, carb: 6, fat: 0, fib: 0 },
+                    { text: "50 g malín", cal: 25, pro: 1, carb: 6, fat: 0, fib: 3 }
+                ]},
+                { title: "🍆 Zapekaný baklažán", steps: "1. Baklažán natri paradajkami, posyp syrom a zapeč.", ing: [
+                    { text: "200 g baklažánu", cal: 50, pro: 2, carb: 12, fat: 0, fib: 6 },
+                    { text: "100 ml pasírovaných paradajok", cal: 30, pro: 1, carb: 6, fat: 0, fib: 1 },
+                    { text: "100 g light mozzarelly", cal: 160, pro: 20, carb: 2, fat: 9, fib: 0 },
+                    { text: "150 g zemiakov", cal: 110, pro: 3, carb: 25, fat: 0, fib: 2 }
+                ]}
+            ],
+            7: [
+                { title: "🥞 Ovsené lievance", steps: "1. Rozmixuj a opeč lievance na panvici.", ing: [
+                    { text: "50 g ovsených vločiek", cal: 185, pro: 7, carb: 30, fat: 3, fib: 5 },
+                    { text: "1 ks vajca", cal: 70, pro: 6, carb: 0, fat: 5, fib: 0 },
+                    { text: "50 ml mlieka", cal: 25, pro: 2, carb: 2, fat: 1, fib: 0 },
+                    { text: "10 g javorového sirupu", cal: 25, pro: 0, carb: 6, fat: 0, fib: 0 },
+                    { text: "100 g jahôd", cal: 30, pro: 1, carb: 8, fat: 0, fib: 2 }
+                ]},
+                { title: "🌰 Semiačka a orechy", steps: "1. Rýchly snack.", ing: [
+                    { text: "20 g tekvicových semienok", cal: 110, pro: 5, carb: 3, fat: 9, fib: 1 },
+                    { text: "15 g vlašských orechov", cal: 100, pro: 2, carb: 2, fat: 10, fib: 1 }
+                ]},
+                { title: "🍛 Rizoto s hráškom", steps: "1. Ryžu uvar.\n2. Vmiešaj teplý hrášok a posyp parmezánom.", ing: [
+                    { text: "60 g hnedej ryže", cal: 220, pro: 5, carb: 45, fat: 2, fib: 2 },
+                    { text: "100 g zeleného hrášku", cal: 80, pro: 5, carb: 14, fat: 0, fib: 5 },
+                    { text: "20 g parmezánu", cal: 80, pro: 7, carb: 1, fat: 6, fib: 0 }
+                ]},
+                { title: "🧀 Jablko a syr", steps: "1. Nakrájaj a zjedz.", ing: [
+                    { text: "150 g jablka", cal: 80, pro: 0, carb: 20, fat: 0, fib: 4 },
+                    { text: "20 g syra Eidam", cal: 70, pro: 6, carb: 0, fat: 5, fib: 0 }
+                ]},
+                { title: "🌯 Kurací wrap", steps: "1. Sprav tzatziki.\n2. Mäso opeč a naplň tortilu.", ing: [
+                    { text: "1 ks celozrnnej tortily", cal: 180, pro: 5, carb: 30, fat: 4, fib: 4 },
+                    { text: "100 g kuracích pŕs", cal: 110, pro: 23, carb: 0, fat: 1, fib: 0 },
+                    { text: "50 g čiernej fazule", cal: 60, pro: 4, carb: 10, fat: 0, fib: 4 },
+                    { text: "100 g listovej zeleniny", cal: 15, pro: 1, carb: 3, fat: 0, fib: 2 },
+                    { text: "50 g gréckeho jogurtu", cal: 30, pro: 5, carb: 2, fat: 0, fib: 0 },
+                    { text: "50 g šalátovej uhorky", cal: 10, pro: 0, carb: 2, fat: 0, fib: 0 }
+                ]}
+            ]
+        };
+
+        // Zdieľaný stav aplikácie
+        let currentMealPlan = {};
+        let shoppingList = JSON.parse(localStorage.getItem('shoppingListIDs')) || [];
+        let purchasedList = JSON.parse(localStorage.getItem('purchasedKeys')) || [];
+        let mealStatuses = JSON.parse(localStorage.getItem('mealStatuses')) || {}; 
+        let customFoods = JSON.parse(localStorage.getItem('customFoods')) || {};
+        let currentMealId = "";
+        let currentMealDay = 0;
+        let currentMealIdx = 0;
+
+        // --- 2. Hlavná Logika (Škálovanie a Vykresľovanie) ---
+        function initApp() {
+            setInputsFromGoals();
+            generateScaledPlan();
+            renderGrid();
+            updateAllDaySummaries();
+            saveCartData();
+        }
+
+        function setInputsFromGoals() {
+            document.getElementById("goal-cal").value = GOALS.cal;
+            document.getElementById("goal-pro").value = GOALS.pro;
+            document.getElementById("goal-carb").value = GOALS.carb;
+            document.getElementById("goal-fat").value = GOALS.fat;
+            document.getElementById("goal-fib").value = GOALS.fib;
+        }
+
+        // TÁTO FUNKCIA TERAZ PRISPOZOBÍ VŠETKO PODĽA HOCIJAKÉHO ZMENENÉHO ČÍSLA
+        function updateGoal(type) {
+            let val = parseInt(document.getElementById(`goal-${type}`).value);
+            if (!val || val <= 0) {
+                document.getElementById(`goal-${type}`).value = GOALS[type]; 
+                return;
+            }
+
+            // Vypočítame koľkonásobne používateľ číslo zmenil oproti základu
+            let ratio = val / BASE_GOALS[type];
+
+            // Aplikujeme tento pomer na všetky ostatné ciele, aby zostali pekne vyvážené
+            GOALS.cal = Math.round(BASE_GOALS.cal * ratio);
+            GOALS.pro = Math.round(BASE_GOALS.pro * ratio);
+            GOALS.carb = Math.round(BASE_GOALS.carb * ratio);
+            GOALS.fat = Math.round(BASE_GOALS.fat * ratio);
+            GOALS.fib = Math.round(BASE_GOALS.fib * ratio);
+            
+            // Reálne zadaná hodnota ostane úplne presná (aby ju neposunulo zaokrúhľovanie)
+            GOALS[type] = val;
+
+            setInputsFromGoals();
+            localStorage.setItem('userGoals', JSON.stringify(GOALS));
+            
+            // Všetky porcie v receptoch sa prepočítajú presne podľa tohto nového pomeru!
+            generateScaledPlan();
+            renderGrid();
+            updateAllDaySummaries();
+
+            if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+            if(document.getElementById("summaryModal").classList.contains("active")) openSummaryModal(currentMealDay);
+            if(document.getElementById("cartModal").classList.contains("active")) openCart();
+        }
+
+        function generateScaledPlan() {
+            currentMealPlan = JSON.parse(JSON.stringify(BASE_MEAL_PLAN)); // Hlboká kópia základného plánu
+            let generalRatio = GOALS.cal / BASE_GOALS.cal; // Všeobecný pomer pre pevné suroviny
+
+            for (let day = 1; day <= 7; day++) {
+                let dayCustomCals = 0;
+                let dayFixedCals = 0;
+                let dayScalableBaseCals = 0;
+
+                // --- 1. KOLO: Analýza celého dňa ---
+                currentMealPlan[day].forEach((meal, mIdx) => {
+                    meal.day = day; meal.mIdx = mIdx;
+                    let cID = `d${day}_m${mIdx}`;
+                    
+                    // Pridanie vlastných surovín užívateľa
+                    if (customFoods[cID]) {
+                        let cfCopy = JSON.parse(JSON.stringify(customFoods[cID]));
+                        cfCopy.forEach(cf => {
+                            cf.isCustom = true;
+                            dayCustomCals += cf.cal; // Tieto kalórie sú fixné
+                        });
+                        meal.ing = meal.ing.concat(cfCopy);
+                    }
+                    
+                    meal.ing.forEach(i => {
+                        if (!i.isCustom) {
+                            let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                            if(match) {
+                                let qty = parseFloat(match[1].replace(',', '.'));
+                                let unit = match[2].toLowerCase();
+                                
+                                if (unit === 'ks') {
+                                    // Pevná surovina (Vajcia, ovocie...)
+                                    let finalQty = Math.round(qty * generalRatio);
+                                    if (finalQty === 0 && qty > 0) finalQty = 1; // Aby položka nezmizla
+                                    i.calcRatio = finalQty / qty;
+                                    i.finalQty = finalQty;
+                                    dayFixedCals += i.cal * i.calcRatio;
+                                } else {
+                                    // Sypká surovina určená na dorovnanie dňa
+                                    i.calcRatio = null;
+                                    dayScalableBaseCals += i.cal;
+                                }
+                            } else {
+                                i.calcRatio = null;
+                                dayScalableBaseCals += i.cal;
+                            }
+                        }
+                    });
+                });
+
+                // --- VÝPOČET DENNÉHO DOROVNANIA ---
+                let targetDayCal = GOALS.cal;
+                let remainingCals = targetDayCal - dayCustomCals - dayFixedCals;
+                if (remainingCals < 0) remainingCals = 0; // Nepôjdeme do mínusu ak užívateľ pridal priveľa čokolády
+                
+                let scalableRatio = generalRatio; // Záložný plán
+                if (dayScalableBaseCals > 0) {
+                    scalableRatio = remainingCals / dayScalableBaseCals; // Reálny pomer potrebný na dosiahnutie cieľa
+                }
+
+                // --- 2. KOLO: Aplikovanie pomerov a prepočet makier pre daný deň ---
+                currentMealPlan[day].forEach(meal => {
+                    meal.cal = 0; meal.pro = 0; meal.carb = 0; meal.fat = 0; meal.fib = 0;
+                    
+                    meal.ing.forEach(i => {
+                        if(!i.isCustom) {
+                            let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                            if(match) {
+                                let qty = parseFloat(match[1].replace(',', '.'));
+                                let unit = match[2];
+                                let name = match[3];
+                                
+                                let effectiveRatio = i.calcRatio !== null ? i.calcRatio : scalableRatio;
+                                let finalQty = i.finalQty !== undefined ? i.finalQty : (qty * effectiveRatio);
+
+                                let lowerUnit = unit.toLowerCase();
+                                if (lowerUnit !== 'ks') {
+                                    if (lowerUnit === 'g' || lowerUnit === 'ml') {
+                                        finalQty = Math.round(finalQty);
+                                    } else if (lowerUnit === 'čl' || lowerUnit === 'pl' || lowerUnit === 'hrsť') {
+                                        finalQty = Math.round(finalQty * 2) / 2;
+                                        if (finalQty === 0) finalQty = 0.5;
+                                    } else {
+                                        finalQty = +(finalQty).toFixed(1);
+                                    }
+                                    // Spätný prepočet presného pomeru makier podľa toho, ako sme zaokrúhlili gramy
+                                    effectiveRatio = finalQty / qty; 
+                                }
+
+                                i.text = `${finalQty} ${unit} ${name}`;
+                                i.cal = Math.round(i.cal * effectiveRatio);
+                                i.pro = Math.round(i.pro * effectiveRatio);
+                                i.carb = Math.round(i.carb * effectiveRatio);
+                                i.fat = Math.round(i.fat * effectiveRatio);
+                                i.fib = Math.round(i.fib * effectiveRatio);
+                            } else {
+                                // Ak nemá jednotku, prenásobíme to aspoň matematicky
+                                i.cal = Math.round(i.cal * scalableRatio);
+                                i.pro = Math.round(i.pro * scalableRatio);
+                                i.carb = Math.round(i.carb * scalableRatio);
+                                i.fat = Math.round(i.fat * scalableRatio);
+                                i.fib = Math.round(i.fib * scalableRatio);
+                            }
+                        }
+                        
+                        // Sčítame makrá po položkách, aby jedlo absolútne presne sedelo
+                        meal.cal += i.cal; meal.pro += i.pro; meal.carb += i.carb; 
+                        meal.fat += i.fat; meal.fib += i.fib;
+                    });
+                });
+            }
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById("scheduleGrid");
+            grid.innerHTML = `
+                <div class="col-header empty"></div>
+                <div class="col-header">Raňajky</div>
+                <div class="col-header">Desiata</div>
+                <div class="col-header">Obed</div>
+                <div class="col-header">Olovrant</div>
+                <div class="col-header">Večera</div>
+                <div class="col-header summary">Denný súčet 📊</div>
+            `;
+            
+            const nazvyDni = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
+            
+            for (let day = 1; day <= 7; day++) {
+                let dayCell = document.createElement("div");
+                dayCell.className = "day-label";
+                dayCell.innerText = nazvyDni[day - 1];
+                grid.appendChild(dayCell);
+                
+                currentMealPlan[day].forEach(meal => {
+                    let cell = document.createElement("div");
+                    cell.className = "meal-cell";
+                    cell.id = `cell_d${meal.day}_m${meal.mIdx}`;
+                    cell.innerHTML = `
+                        <div class="meal-cell-title">${meal.title}</div>
+                        <div class="meal-cell-macros" style="line-height: 1.5; margin-top: 4px;">
+                            🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g<br>
+                            🍞 ${meal.carb}g | 🥑 ${meal.fat}g | 🌾 ${meal.fib}g
+                        </div>
+                    `;
+                    
+                    let status = mealStatuses[`d${meal.day}_m${meal.mIdx}`];
+                    if(status === 'eaten') cell.classList.add('meal-eaten');
+                    if(status === 'skipped') cell.classList.add('meal-skipped');
+                    
+                    cell.onclick = () => openMealModal(meal);
+                    grid.appendChild(cell);
+                });
+
+                let summaryCell = document.createElement("div");
+                summaryCell.className = "summary-cell";
+                summaryCell.id = `summary_d${day}`;
+                summaryCell.onclick = () => openSummaryModal(day);
+                grid.appendChild(summaryCell);
+            }
+        }
+
+        function updateAllDaySummaries() {
+            for (let day = 1; day <= 7; day++) {
+                let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
+                currentMealPlan[day].forEach(meal => {
+                    if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
+                        sums.cal += meal.cal; sums.pro += meal.pro; 
+                        sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
+                    }
+                });
+
+                let pCal = Math.min((sums.cal / GOALS.cal) * 100, 100) || 0;
+                let pPro = Math.min((sums.pro / GOALS.pro) * 100, 100) || 0;
+                let pCarb = Math.min((sums.carb / GOALS.carb) * 100, 100) || 0;
+                let pFat = Math.min((sums.fat / GOALS.fat) * 100, 100) || 0;
+                let pFib = Math.min((sums.fib / GOALS.fib) * 100, 100) || 0;
+                
+                let sCell = document.getElementById(`summary_d${day}`);
+                if (sCell) {
+                    sCell.innerHTML = `
+                        <div class="summary-title">Spolu: ${sums.cal} / ${GOALS.cal} kcal</div>
+                        <div class="macro-progress-text">
+                            <div class="mpt-fill" style="width:${pCal}%; background:var(--primary-light);"></div>
+                            <span class="mpt-label">🔥 Kalórie</span><span class="mpt-value">${sums.cal}/${GOALS.cal}</span>
+                        </div>
+                        <div class="macro-progress-text">
+                            <div class="mpt-fill" style="width:${pPro}%; background:var(--secondary-light);"></div>
+                            <span class="mpt-label">🥩 Bielkoviny</span><span class="mpt-value">${sums.pro}/${GOALS.pro}g</span>
+                        </div>
+                        <div class="macro-progress-text">
+                            <div class="mpt-fill" style="width:${pCarb}%; background:var(--blue-light);"></div>
+                            <span class="mpt-label">🍞 Sacharidy</span><span class="mpt-value">${sums.carb}/${GOALS.carb}g</span>
+                        </div>
+                        <div class="macro-progress-text">
+                            <div class="mpt-fill" style="width:${pFat}%; background:var(--yellow-light);"></div>
+                            <span class="mpt-label">🥑 Tuky</span><span class="mpt-value">${sums.fat}/${GOALS.fat}g</span>
+                        </div>
+                        <div class="macro-progress-text">
+                            <div class="mpt-fill" style="width:${pFib}%; background:#e7e5e4;"></div>
+                            <span class="mpt-label">🌾 Vláknina</span><span class="mpt-value">${sums.fib}/${GOALS.fib}g</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // --- 3. Modálne Okná ---
+        function openMealModal(meal) {
+            currentMealId = `d${meal.day}_m${meal.mIdx}`;
+            currentMealDay = meal.day;
+            currentMealIdx = meal.mIdx;
+            
+            document.getElementById("mTitle").innerText = meal.title;
+            document.getElementById("mMacros").innerHTML = `
+                <span class="macro-badge bg-cal">🔥 ${meal.cal} kcal</span>
+                <span class="macro-badge bg-pro">🥩 ${meal.pro}g Pro</span>
+                <span class="macro-badge bg-carb">🍞 ${meal.carb}g Sac</span>
+                <span class="macro-badge bg-fat">🥑 ${meal.fat}g Tuk</span>
+                <span class="macro-badge bg-fib">🌾 ${meal.fib}g Vlák</span>
+            `;
+            
+            let status = mealStatuses[currentMealId];
+            document.getElementById("btnEaten").className = "btn-status btn-eaten" + (status === 'eaten' ? " active" : "");
+            document.getElementById("btnSkipped").className = "btn-status btn-skipped" + (status === 'skipped' ? " active" : "");
+            
+            let ingList = document.getElementById("mIngredients");
+            ingList.innerHTML = "";
+            meal.ing.forEach((item, iIdx) => {
+                let id = `d${meal.day}_m${meal.mIdx}_i${iIdx}`;
+                let isCheckedInCart = shoppingList.includes(id);
+                
+                let key = extractKeyFromText(item.text);
+                let isPurchased = purchasedList.includes(key);
+                
+                let checkboxChecked = isCheckedInCart ? "checked" : "";
+                let infoClass = isPurchased ? "ingredient-info purchased" : "ingredient-info";
+
+                let customTag = item.isCustom ? "<span style='font-size:0.7rem; background:#e7e5e4; padding:2px 6px; border-radius:4px; margin-left:5px;'>Vlastné</span>" : "";
+
+                let li = document.createElement("li");
+                li.innerHTML = `
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" onchange="toggleIngredient('${id}', this.checked)" ${checkboxChecked}>
+                        <div class="checkmark"></div>
+                        <div class="${infoClass}">
+                            <span class="ingredient-text">${item.text} ${customTag}</span>
+                            <span class="ingredient-macro-detail">${item.cal} kcal | P:${item.pro}g | S:${item.carb}g | T:${item.fat}g | V:${item.fib}g</span>
+                        </div>
+                    </label>
+                `;
+                ingList.appendChild(li);
+            });
+            
+            document.getElementById("mSteps").innerText = meal.steps;
+            document.getElementById("cfName").value = "";
+            ["cfCal", "cfPro", "cfCarb", "cfFat", "cfFib"].forEach(id => document.getElementById(id).value = "");
+
+            document.getElementById("mealModal").classList.add("active");
+        }
+
+        function openSummaryModal(day) {
+            currentMealDay = day;
+            const nazvyDni = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota", "Nedeľa"];
+            document.getElementById("sTitle").innerText = `${nazvyDni[day-1]} - Detailný prehľad`;
+            
+            let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
+            let eatenMealsHtml = "";
+
+            currentMealPlan[day].forEach(meal => {
+                if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
+                    sums.cal += meal.cal; sums.pro += meal.pro; 
+                    sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
+                    eatenMealsHtml += `<li style="padding:10px 0; border-bottom:1px dashed #e7e5e4;">✔️ ${meal.title} <br><span style="color:#78716c; font-size:0.8rem; margin-left:22px;">🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g Pro | 🍞 ${meal.carb}g Sac</span></li>`;
+                }
+            });
+
+            if(eatenMealsHtml === "") eatenMealsHtml = "<p style='color:#78716c; font-style:italic;'>Zatiaľ si v tento deň neoznačil žiadne zjedené jedlo.</p>";
+            document.getElementById("sEatenMeals").innerHTML = eatenMealsHtml;
+
+            const renderBar = (label, current, goal, color) => {
+                let pct = Math.min((current / goal) * 100, 100) || 0;
+                return `
+                <div class="big-progress-row">
+                    <div class="bp-header">
+                        <span>${label}</span>
+                        <span class="bp-val">${current} / ${goal}</span>
+                    </div>
+                    <div class="bp-bar"><div class="bp-fill" style="width:${pct}%; background:${color};"></div></div>
+                </div>`;
+            };
+
+            document.getElementById("sCharts").innerHTML = 
+                renderBar("🔥 Kalórie (kcal)", sums.cal, GOALS.cal, "var(--primary)") +
+                renderBar("🥩 Bielkoviny (g)", sums.pro, GOALS.pro, "var(--secondary)") +
+                renderBar("🍞 Sacharidy (g)", sums.carb, GOALS.carb, "var(--blue-main)") +
+                renderBar("🥑 Tuky (g)", sums.fat, GOALS.fat, "var(--yellow-main)") +
+                renderBar("🌾 Vláknina (g)", sums.fib, GOALS.fib, "#78716c");
+
+            document.getElementById("summaryModal").classList.add("active");
+        }
+
+        // --- 4. Zjedol som / Vlastné suroviny ---
+        function setMealStatus(status) {
+            let cell = document.getElementById(`cell_${currentMealId}`);
+            if (mealStatuses[currentMealId] === status) {
+                delete mealStatuses[currentMealId];
+                cell.classList.remove('meal-eaten', 'meal-skipped');
+                document.getElementById("btnEaten").classList.remove('active');
+                document.getElementById("btnSkipped").classList.remove('active');
+            } else {
+                mealStatuses[currentMealId] = status;
+                cell.classList.remove('meal-eaten', 'meal-skipped');
+                cell.classList.add(status === 'eaten' ? 'meal-eaten' : 'meal-skipped');
+                document.getElementById("btnEaten").className = "btn-status btn-eaten" + (status === 'eaten' ? " active" : "");
+                document.getElementById("btnSkipped").className = "btn-status btn-skipped" + (status === 'skipped' ? " active" : "");
+            }
+            localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
+            updateAllDaySummaries();
+        }
+
+        function addCustomFood() {
+            let name = document.getElementById("cfName").value.trim();
+            if(!name) return alert("Zadaj názov suroviny.");
+            
+            let cf = {
+                text: name,
+                cal: parseInt(document.getElementById("cfCal").value) || 0,
+                pro: parseInt(document.getElementById("cfPro").value) || 0,
+                carb: parseInt(document.getElementById("cfCarb").value) || 0,
+                fat: parseInt(document.getElementById("cfFat").value) || 0,
+                fib: parseInt(document.getElementById("cfFib").value) || 0
+            };
+            
+            if (!customFoods[currentMealId]) customFoods[currentMealId] = [];
+            customFoods[currentMealId].push(cf);
+            localStorage.setItem('customFoods', JSON.stringify(customFoods));
+            
+            generateScaledPlan();
+            renderGrid();
+            updateAllDaySummaries();
+            openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+        }
+
+        // --- 5. Nákupný zoznam ---
+        function extractKeyFromText(text) {
+            let match = text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+            let unit = "", name = text;
+            if(match) { unit = match[2]; name = match[3]; }
+            return name.toLowerCase() + "|" + unit;
+        }
+
+        function getCategory(name) {
+            const lower = name.toLowerCase();
+            if (lower.match(/(kurac|bravč|hovädz|morč|losos|tuniak|mäso|pŕs)/)) return '🥩 Mäso a Ryby';
+            if (lower.match(/(jogurt|mliek|syr|tvaroh|vajc|masl|skyr|kefír|mozzarella|parmezán|cottage)/)) return '🥛 Mliečne výrobky a Vajcia';
+            if (lower.match(/(jablk|čučoried|brokolic|paradajk|rukol|banán|hrušk|špenát|mrkv|kapust|malin|pomaranč|baklažán|jahôd|uhork|fazuľ|kukuric|šampiňón|hrášok|olív|cibuľ|cesnak|zelenin)/)) return '🥦 Ovocie a Zelenina';
+            if (lower.match(/(vločk|chleb|quino|šošovic|ryž|zemiak|batat|cestovin|bulgur|tarhoň|pohánk|knäckebrot|tortil|cícer|hummus)/)) return '🍞 Prílohy a Pečivo';
+            if (lower.match(/(chia|mandl|olej|orech|arašid|ľanov|tekvic|semien)/)) return '🥜 Tuky, Orechy a Semená';
+            return '🛒 Ostatné';
+        }
+
+        function getAggregatedCart() {
+            let cartObj = {};
+            shoppingList.forEach(id => {
+                let parts = id.match(/d(\d+)_m(\d+)_i(\d+)/);
+                if(parts) {
+                    let rawStr = currentMealPlan[parts[1]][parts[2]].ing[parts[3]].text; 
+                    let match = rawStr.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                    let qty = 1, unit = "", name = rawStr;
+                    if(match) { qty = parseFloat(match[1].replace(',', '.')); unit = match[2]; name = match[3]; }
+
+                    let key = name.toLowerCase() + "|" + unit;
+                    if(!cartObj[key]) cartObj[key] = { qty: 0, unit: unit, name: name };
+                    cartObj[key].qty += qty;
+                }
+            });
+            return cartObj;
+        }
+
+        function toggleIngredient(id, isChecked) {
+            if (isChecked && !shoppingList.includes(id)) shoppingList.push(id);
+            else shoppingList = shoppingList.filter(item => item !== id);
+            
+            let currentKeys = Object.keys(getAggregatedCart());
+            purchasedList = purchasedList.filter(k => currentKeys.includes(k));
+            saveCartData();
+            
+            if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+        }
+
+        function togglePurchased(key, isPurchased) {
+            if (isPurchased && !purchasedList.includes(key)) purchasedList.push(key);
+            else purchasedList = purchasedList.filter(k => k !== key);
+            saveCartData();
+            openCart(); 
+            if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+        }
+
+        function saveCartData() {
+            localStorage.setItem('shoppingListIDs', JSON.stringify(shoppingList));
+            localStorage.setItem('purchasedKeys', JSON.stringify(purchasedList));
+            let currentKeys = Object.keys(getAggregatedCart());
+            document.getElementById("cartCount").innerText = currentKeys.length - purchasedList.filter(k => currentKeys.includes(k)).length;
+        }
+
+        function createCartItemHTML(key, item, isPurchased) {
+            let displayString = item.unit ? `${+(item.qty).toFixed(1)} ${item.unit} ${item.name}` : `${item.name}`;
+            let isChecked = isPurchased ? "checked" : "";
+            let textStyle = isPurchased ? "text-decoration: line-through; opacity: 0.5;" : "";
+            return `
+            <li style="padding:10px 0;">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" onchange="togglePurchased('${key}', this.checked)" ${isChecked}>
+                    <div class="checkmark"></div>
+                    <span class="ingredient-text" style="margin-top:2px; ${textStyle}">${displayString}</span>
+                </label>
+            </li>`;
+        }
+
+        function openCart() {
+            let cartContent = document.getElementById("cartContent");
+            let aggregated = getAggregatedCart();
+            let keys = Object.keys(aggregated);
+            
+            if (keys.length === 0) {
+                cartContent.innerHTML = "<p class='empty-cart-msg'>Zoznam je prázdny. Odškrtni suroviny v receptoch.</p>";
+                document.getElementById("cartModal").classList.add("active");
+                return;
+            }
+
+            let sortMethod = document.getElementById("cartSort").value;
+            let unpurchased = keys.filter(k => !purchasedList.includes(k));
+            let purchased = keys.filter(k => purchasedList.includes(k));
+
+            unpurchased.sort((a, b) => {
+                let itemA = aggregated[a]; let itemB = aggregated[b];
+                if (sortMethod === "qty") return itemB.qty - itemA.qty; 
+                else if (sortMethod === "cat") {
+                    let catA = getCategory(itemA.name), catB = getCategory(itemB.name);
+                    if (catA === catB) return itemA.name.localeCompare(itemB.name);
+                    return catA.localeCompare(catB);
+                } else return itemA.name.localeCompare(itemB.name); 
+            });
+
+            let listHTML = "";
+            if (sortMethod === "cat") {
+                let categories = {};
+                unpurchased.forEach(k => {
+                    let cat = getCategory(aggregated[k].name);
+                    if (!categories[cat]) categories[cat] = [];
+                    categories[cat].push(k);
+                });
+                Object.keys(categories).sort().forEach(cat => {
+                    listHTML += `<h4 style="margin-top:15px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-main); font-size: 0.95rem;">${cat}</h4>`;
+                    listHTML += `<ul class='ingredients' style='margin-bottom:0;'>`;
+                    categories[cat].forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false));
+                    listHTML += `</ul>`;
+                });
+            } else {
+                listHTML += "<ul class='ingredients' style='margin-bottom:0;'>";
+                unpurchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false));
+                listHTML += "</ul>";
+            }
+
+            if (purchased.length > 0) {
+                listHTML += `<h4 style="margin-top:25px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-muted); font-size: 0.95rem;">✔️ Zakúpené</h4>`;
+                listHTML += "<ul class='ingredients' style='margin-bottom:0;'>";
+                purchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], true));
+                listHTML += "</ul>";
+            }
+
+            cartContent.innerHTML = listHTML;
+            document.getElementById("cartModal").classList.add("active");
+        }
+
+        function clearCart() {
+            if(confirm("Naozaj vymazať celý zoznam?")) {
+                shoppingList = []; purchasedList = []; saveCartData(); closeModal('cartModal');
+                document.querySelectorAll('.checkbox-wrapper input[type="checkbox"]').forEach(cb => cb.checked = false);
+                if(document.getElementById("mealModal").classList.contains("active")) openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+            }
+        }
+
+        function addWholeMealToCart() {
+            currentMealPlan[currentMealDay][currentMealIdx].ing.forEach((item, iIdx) => {
+                let id = `d${currentMealDay}_m${currentMealIdx}_i${iIdx}`;
+                if (!shoppingList.includes(id)) shoppingList.push(id);
+            });
+            saveCartData(); openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
+        }
+
+        function addWholeDayToCart() {
+            currentMealPlan[currentMealDay].forEach(meal => {
+                meal.ing.forEach((item, iIdx) => {
+                    let id = `d${currentMealDay}_m${meal.mIdx}_i${iIdx}`;
+                    if (!shoppingList.includes(id)) shoppingList.push(id);
+                });
+            });
+            saveCartData(); alert("Všetky jedlá z tohto dňa boli pridané.");
+        }
+
+        function addWholeWeekToCart() {
+            for (let d = 1; d <= 7; d++) {
+                currentMealPlan[d].forEach(meal => {
+                    meal.ing.forEach((item, iIdx) => {
+                        let id = `d${d}_m${meal.mIdx}_i${iIdx}`;
+                        if (!shoppingList.includes(id)) shoppingList.push(id);
+                    });
+                });
+            }
+            saveCartData(); openCart(); 
+        }
+
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove("active"); }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) { if(e.target === this) this.classList.remove("active"); });
+        });
+
+        // Spustenie aplikácie
+        initApp();
+    </script>
+</body>
+</html>
