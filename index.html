@@ -304,11 +304,15 @@
             <button class="close-btn" onclick="closeModal('cartModal')">✕</button>
             <div class="modal-header">
                 <h2 style="margin: 0;">Nákup</h2>
-                <div class="modal-header-actions">
+                <div class="modal-header-actions" style="display: flex; gap: 8px;">
                     <select id="cartSort" class="select-sort" onchange="openCart()">
                         <option value="name">Podľa názvu</option>
                         <option value="qty">Podľa množstva</option>
                         <option value="cat">Podľa kategórie</option>
+                    </select>
+                    <select id="cartSortDir" class="select-sort" onchange="openCart()">
+                        <option value="asc">Vzostupne ⬇️</option>
+                        <option value="desc">Zostupne ⬆️</option>
                     </select>
                 </div>
             </div>
@@ -894,37 +898,97 @@
             return `<li style="padding:10px 0;"><label class="checkbox-wrapper"><input type="checkbox" onchange="togglePurchased('${key}', this.checked)" ${isChecked}><div class="checkmark"></div><span class="ingredient-text" style="margin-top:2px; ${textStyle}">${escapeHTML(displayString)}</span></label></li>`;
         }
 
+        function getUnitWeight(unit) {
+            if (!unit) return 2;
+            let u = unit.toLowerCase();
+            // Najprv chceme vážené a merané suroviny (g, kg, ml, l)
+            if (['g', 'kg', 'ml', 'l', 'dkg'].includes(u)) return 1;
+            // Potom kusové a iné (ks, pl, čl, hrsť, atď.)
+            return 2;
+        }
+
         function openCart() {
-            let cartContent = document.getElementById("cartContent"); let aggregated = getAggregatedCart(); let keys = Object.keys(aggregated);
+            let cartContent = document.getElementById("cartContent"); 
+            let aggregated = getAggregatedCart(); 
+            let keys = Object.keys(aggregated);
+            
             if (keys.length === 0) {
                 cartContent.innerHTML = "<p class='empty-cart-msg'>Zoznam je prázdny. Vyber si suroviny alebo pridaj celé dni.</p>";
-                document.getElementById("cartModal").classList.add("active"); return;
+                document.getElementById("cartModal").classList.add("active"); 
+                return;
             }
-            let sortMethod = document.getElementById("cartSort").value; let unpurchased = keys.filter(k => !purchasedList.includes(k)); let purchased = keys.filter(k => purchasedList.includes(k));
-            unpurchased.sort((a, b) => {
-                let itemA = aggregated[a]; let itemB = aggregated[b];
-                if (sortMethod === "qty") return itemB.qty - itemA.qty; 
+            
+            let sortMethod = document.getElementById("cartSort").value; 
+            let sortDir = document.getElementById("cartSortDir").value; 
+            let dirMultiplier = sortDir === "desc" ? -1 : 1; // Násobič pre otočenie smeru
+
+            let unpurchased = keys.filter(k => !purchasedList.includes(k)); 
+            let purchased = keys.filter(k => purchasedList.includes(k));
+
+            const sortLogic = (a, b) => {
+                let itemA = aggregated[a]; 
+                let itemB = aggregated[b];
+                let result = 0;
+
+                if (sortMethod === "qty") {
+                    let weightA = getUnitWeight(itemA.unit);
+                    let weightB = getUnitWeight(itemB.unit);
+                    
+                    // Bez ohľadu na smer (asc/desc), vždy chceme najprv Gramy/Ml, až potom Kusy
+                    if (weightA !== weightB) return weightA - weightB; 
+                    
+                    // Ak sú obe gramy (alebo obe kusy), radíme podľa čísla
+                    result = itemA.qty - itemB.qty;
+                    // Ak je číslo rovnaké, radíme abecedne podľa názvu
+                    if (result === 0) result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk');
+                } 
                 else if (sortMethod === "cat") {
-                    let catA = getCategory(itemA.name), catB = getCategory(itemB.name);
-                    return catA === catB ? itemA.name.localeCompare(itemB.name) : catA.localeCompare(catB);
-                } else return itemA.name.localeCompare(itemB.name); 
-            });
+                    let catA = getCategory(itemA.name);
+                    let catB = getCategory(itemB.name);
+                    if (catA === catB) result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk');
+                    else result = catA.localeCompare(catB, 'sk');
+                } 
+                else { 
+                    // Podľa názvu (rešpektujeme slovenskú abecedu a orezávame medzery)
+                    result = itemA.name.trim().localeCompare(itemB.name.trim(), 'sk'); 
+                }
+
+                return result * dirMultiplier;
+            };
+
+            unpurchased.sort(sortLogic);
+            purchased.sort(sortLogic);
 
             let listHTML = "";
+            
             if (sortMethod === "cat") {
-                let categories = {}; unpurchased.forEach(k => { let cat = getCategory(aggregated[k].name); if (!categories[cat]) categories[cat] = []; categories[cat].push(k); });
-                Object.keys(categories).sort().forEach(cat => {
+                let categories = {}; 
+                unpurchased.forEach(k => { 
+                    let cat = getCategory(aggregated[k].name); 
+                    if (!categories[cat]) categories[cat] = []; 
+                    categories[cat].push(k); 
+                });
+                
+                // Samotné nadpisy kategórií tiež rešpektujú Vzostupne/Zostupne
+                Object.keys(categories).sort((a,b) => a.localeCompare(b, 'sk') * dirMultiplier).forEach(cat => {
                     listHTML += `<h4 style="margin-top:15px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-main); font-size: 0.95rem;">${cat}</h4><ul class='ingredients' style='margin-bottom:0;'>`;
-                    categories[cat].forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false)); listHTML += `</ul>`;
+                    categories[cat].forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false)); 
+                    listHTML += `</ul>`;
                 });
             } else {
-                listHTML += "<ul class='ingredients' style='margin-bottom:0;'>"; unpurchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false)); listHTML += "</ul>";
+                listHTML += "<ul class='ingredients' style='margin-bottom:0;'>"; 
+                unpurchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], false)); 
+                listHTML += "</ul>";
             }
+            
             if (purchased.length > 0) {
                 listHTML += `<h4 style="margin-top:25px; border-bottom:1px solid #d6d3d1; padding-bottom:5px; color: var(--text-muted); font-size: 0.95rem;">✔️ Zakúpené</h4><ul class='ingredients' style='margin-bottom:0;'>`;
-                purchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], true)); listHTML += "</ul>";
+                purchased.forEach(key => listHTML += createCartItemHTML(key, aggregated[key], true)); 
+                listHTML += "</ul>";
             }
-            cartContent.innerHTML = listHTML; document.getElementById("cartModal").classList.add("active");
+            
+            cartContent.innerHTML = listHTML; 
+            document.getElementById("cartModal").classList.add("active");
         }
 
         function clearCart() {
