@@ -411,43 +411,69 @@
         function updateGoal(type) {
     let val = parseInt(document.getElementById(`goal-${type}`).value);
     
-    // 1. Ochrana pred nezmyselnými (prázdnymi/zápornými) hodnotami
+    // Ochrana pred zmazaním čísla
     if (!val || val <= 0) {
         document.getElementById(`goal-${type}`).value = GOALS[type];
         return;
     }
 
-    // 2. Zapíšeme novú hodnotu do cieľov
     GOALS[type] = val;
 
-    // 3. FYZIKÁLNA KONTROLA: Výpočet absolútneho minima kalórií z makier
-    let minCalsRequired = (GOALS.pro * 4) + (GOALS.carb * 4) + (GOALS.fat * 9);
+    // Zistíme pôvodný pomer sacharidov a tukov (ako si to jedlo nastavil v základe)
+    let baseCarbCals = BASE_GOALS.carb * 4;
+    let baseFatCals = BASE_GOALS.fat * 9;
+    let flexRatio = baseCarbCals / (baseCarbCals + baseFatCals); // Koľko % z voľných kalórií tvoria sacharidy
 
-    // Ak sú nastavené kalórie menšie ako to, čo vyžadujú makrá
+    // Fyzikálna kontrola: Len proteín má 4 kcal/g. Kalórie nesmú padnúť pod túto hranicu.
+    let minCalsRequired = (GOALS.pro * 4); 
+    
     if (GOALS.cal < minCalsRequired) {
-        // Ak sa používateľ snažil znížiť priamo kalórie na nezmysel
-        if (type === 'cal') {
-            alert(`Pozor: Fyziku neoklameš! 😅\n\nPri tvojich makrách (${GOALS.pro}g Pro, ${GOALS.carb}g Sac, ${GOALS.fat}g Tuk) musíš zjesť minimálne ${minCalsRequired} kcal. Dorovnávam kalórie na toto minimum.`);
-        } 
-        // Ak používateľ zvýšil makro tak, že to presiahlo aktuálne kalórie
-        else {
-            alert(`Nové makrá vyžadujú minimálne ${minCalsRequired} kcal.\nAutomaticky upravujem tvoj kalorický cieľ smerom nahor, aby to matematicky sedelo.`);
-        }
-        
-        // Záchranné koleso: Nastavíme kalórie na reálne minimum
+        alert(`Fyziku neoklameš! Len samotné bielkoviny (${GOALS.pro}g) obsahujú ${minCalsRequired} kcal. Nastavujem kalórie na minimum.`);
         GOALS.cal = minCalsRequired;
     }
 
-    // 4. Aktualizujeme UI a uložíme do pamäte
+    // Výpočet kalórií, ktoré nám zostali na voľné naloženie (Sacharidy a Tuky)
+    let remainingCals = GOALS.cal - (GOALS.pro * 4);
+
+    if (type === 'carb') {
+        // Ak používateľ silou mocou zmení sacharidy ručne, upravíme len tuky
+        remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.carb * 4);
+        if (remainingCals < 0) {
+            GOALS.cal = (GOALS.pro * 4) + (GOALS.carb * 4);
+            GOALS.fat = 0;
+        } else {
+            GOALS.fat = Math.round(remainingCals / 9);
+        }
+    } else if (type === 'fat') {
+        // Ak používateľ zmení ručne tuky, upravíme len sacharidy
+        remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.fat * 9);
+        if (remainingCals < 0) {
+            GOALS.cal = (GOALS.pro * 4) + (GOALS.fat * 9);
+            GOALS.carb = 0;
+        } else {
+            GOALS.carb = Math.round(remainingCals / 4);
+        }
+    } else if (type === 'cal' || type === 'pro') {
+        // HLAVNÁ LOGIKA: Ak zmeníš Proteín alebo Kalórie, systém automaticky rozdelí zvyšok
+        let newCarbCals = remainingCals * flexRatio;
+        let newFatCals = remainingCals * (1 - flexRatio);
+        
+        GOALS.carb = Math.round(newCarbCals / 4);
+        GOALS.fat = Math.round(newFatCals / 9);
+    }
+    // Vláknina ("fib") do týchto prepočtov nevstupuje, žije si vlastným životom.
+
+    // Aktualizujeme čísla v hlavičke a uložíme
     setInputsFromGoals();
     localStorage.setItem('userGoals', JSON.stringify(GOALS));
     
-    // 5. Prekreslíme aplikáciu s novými platnými hodnotami
+    // Prekreslíme celý plán
     generateScaledPlan();
     renderGrid();
     updateAllDaySummaries();
     
-    if(document.getElementById("mealModal").classList.contains("active")) {
+    let modal = document.getElementById("mealModal");
+    if(modal && modal.classList.contains("active")) {
         openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
     }
 }
@@ -455,75 +481,19 @@
 function generateScaledPlan() {
     currentMealPlan = {};
     
+    // Zistíme presné pomery, ako sa zmenili jednotlivé ciele voči základu
     let rPro = GOALS.pro / BASE_GOALS.pro || 1;
     let rCarb = GOALS.carb / BASE_GOALS.carb || 1;
     let rFat = GOALS.fat / BASE_GOALS.fat || 1;
+    let rFib = GOALS.fib / BASE_GOALS.fib || 1;
     let rCal = GOALS.cal / BASE_GOALS.cal || 1;
 
     for (let day = 1; day <= 7; day++) {
         currentMealPlan[day] = [];
         
-        let dayCustomCals = 0;
-        let proBaseCals = 0;
-        let carbBaseCals = 0;
-        let fatBaseCals = 0;
-        let otherBaseCals = 0;
-
-        // FÁZA 1: Sumarizácia kalórií pre dany deň
         for (let mIdx = 0; mIdx <= 4; mIdx++) {
             let poolIdx = chosenMealsTimeline[day][mIdx];
             if(poolIdx === undefined) poolIdx = 0; 
-            
-            let mealBlueprint = pools[mIdx][poolIdx];
-            if(!mealBlueprint) continue;
-
-            let cID = `d${day}_m${mIdx}`;
-            if (customFoods[cID]) {
-                customFoods[cID].forEach(cf => { dayCustomCals += cf.cal; });
-            }
-
-            mealBlueprint.ing.forEach(i => {
-                let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
-                if(match) {
-                    let cat = getCategory(match[3]);
-                    if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') proBaseCals += i.cal;
-                    else if (cat === '🍞 Prílohy a Pečivo') carbBaseCals += i.cal;
-                    else if (cat === '🥜 Tuky, Orechy a Semená') fatBaseCals += i.cal;
-                    else otherBaseCals += i.cal;
-                } else {
-                    otherBaseCals += i.cal;
-                }
-            });
-        }
-
-        // FÁZA 2: Matematika rozdelenia zostatkových kalórií
-        let budgetCals = GOALS.cal - dayCustomCals;
-        if (budgetCals < 0) budgetCals = 0;
-
-        let maxR = Math.max(rPro, rCarb, rFat);
-        let finalRPro = rPro; let finalRCarb = rCarb; let finalRFat = rFat; let finalROther = rCal;
-
-        if (maxR === rPro) {
-            let remaining = budgetCals - (proBaseCals * rPro);
-            let baseRemaining = carbBaseCals + fatBaseCals + otherBaseCals;
-            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
-            finalRCarb = adaptRatio; finalRFat = adaptRatio; finalROther = adaptRatio;
-        } else if (maxR === rCarb) {
-            let remaining = budgetCals - (carbBaseCals * rCarb);
-            let baseRemaining = proBaseCals + fatBaseCals + otherBaseCals;
-            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
-            finalRPro = adaptRatio; finalRFat = adaptRatio; finalROther = adaptRatio;
-        } else {
-            let remaining = budgetCals - (fatBaseCals * rFat);
-            let baseRemaining = proBaseCals + carbBaseCals + otherBaseCals;
-            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
-            finalRPro = adaptRatio; finalRCarb = adaptRatio; finalROther = adaptRatio;
-        }
-
-        // FÁZA 3: Vytvorenie reálneho dňa a škálovanie
-        for (let mIdx = 0; mIdx <= 4; mIdx++) {
-            let poolIdx = chosenMealsTimeline[day][mIdx];
-            if(poolIdx === undefined) poolIdx = 0;
             
             let mealBlueprint = pools[mIdx][poolIdx];
             if(!mealBlueprint) continue;
@@ -542,8 +512,8 @@ function generateScaledPlan() {
 
             mealCopy.ing.forEach(i => {
                 if(!i.isCustom) {
-                    let effectiveRatio = finalROther;
                     let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
+                    let effectiveRatio = rCal; // Záchranná sieť
                     
                     if(match) {
                         let qty = parseFloat(match[1].replace(',', '.'));
@@ -551,14 +521,17 @@ function generateScaledPlan() {
                         let name = match[3];
                         let cat = getCategory(name);
                         
-                        let specificRatio = finalROther;
-                        if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') specificRatio = finalRPro;
-                        else if (cat === '🍞 Prílohy a Pečivo') specificRatio = finalRCarb;
-                        else if (cat === '🥜 Tuky, Orechy a Semená') specificRatio = finalRFat;
+                        // ABSOLÚTNA KONTROLA NAD KATEGÓRIAMI
+                        let specificRatio = rCal;
+                        if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') specificRatio = rPro;
+                        else if (cat === '🍞 Prílohy a Pečivo') specificRatio = rCarb;
+                        else if (cat === '🥜 Tuky, Orechy a Semená') specificRatio = rFat;
+                        else if (cat === '🥦 Ovocie a Zelenina') specificRatio = rFib; // Zelenina poslúcha vlákninu
 
                         let finalQty = qty * specificRatio;
                         let lowerUnit = unit.toLowerCase();
 
+                        // Pekné zaokrúhľovanie
                         if (lowerUnit === 'ks') {
                             finalQty = Math.round(finalQty);
                             if (finalQty === 0 && qty > 0) finalQty = 1;
@@ -575,6 +548,7 @@ function generateScaledPlan() {
                         i.text = `${finalQty} ${unit} ${name}`;
                     }
                     
+                    // Aplikácia reálneho pomeru na surovinu
                     i.cal = Math.round(i.cal * effectiveRatio);
                     i.pro = Math.round(i.pro * effectiveRatio);
                     i.carb = Math.round(i.carb * effectiveRatio);
