@@ -255,7 +255,7 @@ const BASE_MEAL_PLAN = {
             "steps": "zjeme samotný.",
             "ing": [
                 {
-                    "text": "0%)",
+                    "text": "200g grécky jogurt 0%",
                     "cal": 115,
                     "pro": 20,
                     "carb": 6,
@@ -687,7 +687,7 @@ const BASE_MEAL_PLAN = {
             "steps": "zjeme samotné.",
             "ing": [
                 {
-                    "text": "30%)",
+                    "text": "40g tvrdý syr 30%",
                     "cal": 146,
                     "pro": 8,
                     "carb": 0,
@@ -831,7 +831,7 @@ const BASE_MEAL_PLAN = {
             "steps": "zjeme.",
             "ing": [
                 {
-                    "text": "50g) proteínová tyčinka",
+                    "text": "50g proteínová tyčinka",
                     "cal": 184,
                     "pro": 17,
                     "carb": 13,
@@ -1255,7 +1255,7 @@ const BASE_MEAL_PLAN = {
             "steps": "zjeme hotový.",
             "ing": [
                 {
-                    "text": "200g) proteínový puding",
+                    "text": "200g proteínový puding",
                     "cal": 174,
                     "pro": 25,
                     "carb": 10,
@@ -1285,7 +1285,7 @@ const BASE_MEAL_PLAN = {
                     "fib": 9
                 },
                 {
-                    "text": "30%)",
+                    "text": "",
                     "cal": 146,
                     "pro": 8,
                     "carb": 0,
@@ -1639,7 +1639,7 @@ const BASE_MEAL_PLAN = {
             "steps": "zjeme čerstvé.",
             "ing": [
                 {
-                    "text": "30%)",
+                    "text": "",
                     "cal": 78,
                     "pro": 8,
                     "carb": 0,
@@ -3191,7 +3191,7 @@ const BASE_MEAL_PLAN = {
             "steps": "zjeme čerstvé.",
             "ing": [
                 {
-                    "text": "30%)",
+                    "text": "",
                     "cal": 78,
                     "pro": 8,
                     "carb": 0,
@@ -3909,7 +3909,7 @@ const BASE_MEAL_PLAN = {
                     "fib": 1
                 },
                 {
-                    "text": "bez cukru)",
+                    "text": "15g džem bez cukru",
                     "cal": 15,
                     "pro": 0,
                     "carb": 4,
@@ -4637,7 +4637,7 @@ const BASE_MEAL_PLAN = {
                     "fib": 0
                 },
                 {
-                    "text": "30%)",
+                    "text": "",
                     "cal": 70,
                     "pro": 5,
                     "carb": 0,
@@ -4711,7 +4711,7 @@ const BASE_MEAL_PLAN = {
             "steps": "zjeme čistý.",
             "ing": [
                 {
-                    "text": "0%)",
+                    "text": "200g grécky jogurt 0%",
                     "cal": 151,
                     "pro": 23,
                     "carb": 7,
@@ -4901,7 +4901,7 @@ const BASE_MEAL_PLAN = {
                     "fib": 6
                 },
                 {
-                    "text": "40g) celozrnný chlieb",
+                    "text": "40g celozrnný chlieb",
                     "cal": 116,
                     "pro": 3,
                     "carb": 17,
@@ -5083,7 +5083,7 @@ const BASE_MEAL_PLAN = {
             "steps": "zjeme hotový puding.",
             "ing": [
                 {
-                    "text": "200g) proteínový puding",
+                    "text": "200g proteínový puding",
                     "cal": 174,
                     "pro": 25,
                     "carb": 10,
