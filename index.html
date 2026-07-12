@@ -562,7 +562,7 @@
                                 i.pro = (newQtyGrams * sd.p / 100); i.carb = (newQtyGrams * sd.s / 100);
                                 i.fat = (newQtyGrams * sd.t / 100); i.fib = (newQtyGrams * sd.v / 100);
                             }
-                            let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
+                            let match = i.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
                             let effectiveRatio = rCal; 
                             
                             if(match) {
@@ -751,7 +751,7 @@
                 let checkboxChecked = isCheckedInCart ? "checked" : "";
                 let infoClass = isPurchased ? "ingredient-info purchased" : "ingredient-info";
                 let customTag = item.isCustom ? "<span style='font-size:0.7rem; background:#e7e5e4; padding:2px 6px; border-radius:4px; margin-left:5px;'>Vlastné</span>" : "";
-                let match = item.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
+                let match = item.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
                 let nameOnly = match ? match[3] : item.text;
 
                 let li = document.createElement("li");
@@ -824,7 +824,7 @@
 
         // --- NÁKUP ---
         function extractKeyFromText(text) {
-            let match = text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
+            let match = text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
             let unit = "", name = text; if(match) { unit = match[2]; name = match[3]; }
             return name.toLowerCase() + "|" + unit;
         }
@@ -845,7 +845,7 @@
                 let parts = id.match(/d(\d+)_m(\d+)_i(\d+)/);
                 if(parts && currentMealPlan[parts[1]][parts[2]].ing[parts[3]]) {
                     let rawStr = currentMealPlan[parts[1]][parts[2]].ing[parts[3]].text; 
-                    let match = rawStr.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
+                    let match = rawStr.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
                     let qty = 1, unit = "", name = rawStr;
                     if(match) { qty = parseFloat(match[1].replace(',', '.')); unit = match[2]; name = match[3]; }
                     let key = name.toLowerCase() + "|" + unit;
