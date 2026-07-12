@@ -41,7 +41,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
         body { background-color: var(--bg); color: var(--text-main); padding: 40px 20px; line-height: 1.6; padding-bottom: 120px;}
         
-        .header-container { text-align: center; margin-bottom: 40px; }
+        .header-container { text-align: center; margin-bottom: 20px; }
         h1 { font-size: 2.5rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.03em; margin-bottom: 8px;}
         
         .global-actions { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
@@ -208,6 +208,17 @@
                 top: 0;
             }
         }
+
+.btn-icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
     </style>
 </head>
 <body>
@@ -220,23 +231,25 @@
                 🔥 <input type="number" id="goal-cal" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('cal')"> kcal
             </div>
             <div class="legend-input-group" title="Zmeň cieľ Bielkovín">
-                🥩 <input type="number" id="goal-pro" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('pro')"> g Pro
+                🥩 <input type="number" id="goal-pro" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('pro')"> g Protein
             </div>
             <div class="legend-input-group" title="Zmeň cieľ Sacharidov">
-                🍞 <input type="number" id="goal-carb" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('carb')"> g Sac
+                🍞 <input type="number" id="goal-carb" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('carb')"> g Sacharidy
             </div>
             <div class="legend-input-group" title="Zmeň cieľ Tukov">
-                🥑 <input type="number" id="goal-fat" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fat')"> g Tuk
+                🥑 <input type="number" id="goal-fat" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fat')"> g Tuky
             </div>
             <div class="legend-input-group" title="Zmeň cieľ Vlákniny">
-                🌾 <input type="number" id="goal-fib" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fib')"> g Vlák
+                🌾 <input type="number" id="goal-fib" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fib')"> g Vláknina
             </div>
         </div>
         
-        <div class="global-actions">
-            <button class="btn-global" onclick="generateEntireNewWeek()">🔄 Vygenerovať nový náhodný týždeň</button>
+        <div class="global-actions" style="margin-top: 20px;">
+            <button class="btn-global" onclick="generateEntireNewWeek()">
+    <svg class="btn-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    Vygenerovať nový náhodný týždeň
+</button>
         </div>
-        <span class="legend-hint">👆 Klikni na ktorékoľvek číslo a prepíš ho. Stlačením Enter potvrdíš a prepočítaš kompletne celý plán.</span>
     </div>
 
     <div class="schedule-container">
@@ -253,7 +266,9 @@
             <div class="modal-header">
                 <h2 id="mTitle">Názov jedla</h2>
                 <div style="display: flex; gap: 8px; margin-left: auto; padding-right: 40px;">
-                    <button class="icon-btn-small" id="mModalReload" title="Vymeniť toto jedlo za iné náhodné">🔄</button>
+                    <button class="icon-btn-small" id="mModalReload" title="Vymeniť toto jedlo za iné náhodné">
+    <svg class="btn-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+</button>
                     <button class="icon-btn-small" id="mModalCart" title="Pridať toto jedlo do nákupu">🛒</button>
                 </div>
             </div>
@@ -673,7 +688,9 @@
                 dayCell.innerHTML = `
                     <div class="day-label">${nazvyDni[day - 1]}</div>
                     <div class="day-action-icons">
-                        <button class="icon-btn-small" onclick="reloadWholeDay(${day})" title="Vygenerovať iné náhodné jedlá na celý tento deň">🔄</button>
+                        <button class="icon-btn-small" onclick="reloadWholeDay(${day})" title="Vygenerovať iné náhodné jedlá na celý tento deň">
+    <svg class="btn-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+</button>
                         <button class="icon-btn-small" onclick="addWholeDayToCart(${day})" title="Pridať celý tento deň do nákupu">🛒</button>
                     </div>
                 `;
@@ -694,7 +711,9 @@
                                 </div>
                             </div>
                             <div class="meal-cell-actions">
-                                <button class="icon-btn-small" onclick="event.stopPropagation(); reloadSingleMeal(${meal.day}, ${meal.mIdx})" title="Vymeniť iba toto jedlo">🔄</button>
+                                <button class="icon-btn-small" onclick="event.stopPropagation(); reloadSingleMeal(${meal.day}, ${meal.mIdx})" title="Vymeniť iba toto jedlo">
+    <svg class="btn-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+</button>
                                 <button class="icon-btn-small" onclick="event.stopPropagation(); addSingleMealToCart(${meal.day}, ${meal.mIdx})" title="Pridať toto jedlo do nákupu">🛒</button>
                             </div>
                         `;
