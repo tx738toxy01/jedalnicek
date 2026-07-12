@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Môj Inteligentný Jedálniček</title>
+    <!-- Favicon a Apple Touch Icon vygenerované cez SVG (žiadne obrázky netreba) -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%2250%22 font-size=%2280%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🥗</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%23f97316%22/><text x=%2250%22 y=%2250%22 font-size=%2265%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🥗</text></svg>">
+
+<!-- PWA Manifest a nastavenie zobrazenia -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f97316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Jedálniček">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -401,173 +411,44 @@
         function updateGoal(type) {
     let val = parseInt(document.getElementById(`goal-${type}`).value);
     
-    // Ak užívateľ zadá blbosť alebo záporné číslo, vrátime pôvodnú hodnotu
+    // 1. Ochrana pred nezmyselnými (prázdnymi/zápornými) hodnotami
     if (!val || val <= 0) {
         document.getElementById(`goal-${type}`).value = GOALS[type];
         return;
     }
 
-    // Zmeníme IBA ten konkrétny cieľ (napr. 'pro'), ostatné hodnoty v objekte GOALS ostanú nezmenené
+    // 2. Zapíšeme novú hodnotu do cieľov
     GOALS[type] = val;
 
-    // Aktualizujeme UI a uložíme do pamäte
+    // 3. FYZIKÁLNA KONTROLA: Výpočet absolútneho minima kalórií z makier
+    let minCalsRequired = (GOALS.pro * 4) + (GOALS.carb * 4) + (GOALS.fat * 9);
+
+    // Ak sú nastavené kalórie menšie ako to, čo vyžadujú makrá
+    if (GOALS.cal < minCalsRequired) {
+        // Ak sa používateľ snažil znížiť priamo kalórie na nezmysel
+        if (type === 'cal') {
+            alert(`Pozor: Fyziku neoklameš! 😅\n\nPri tvojich makrách (${GOALS.pro}g Pro, ${GOALS.carb}g Sac, ${GOALS.fat}g Tuk) musíš zjesť minimálne ${minCalsRequired} kcal. Dorovnávam kalórie na toto minimum.`);
+        } 
+        // Ak používateľ zvýšil makro tak, že to presiahlo aktuálne kalórie
+        else {
+            alert(`Nové makrá vyžadujú minimálne ${minCalsRequired} kcal.\nAutomaticky upravujem tvoj kalorický cieľ smerom nahor, aby to matematicky sedelo.`);
+        }
+        
+        // Záchranné koleso: Nastavíme kalórie na reálne minimum
+        GOALS.cal = minCalsRequired;
+    }
+
+    // 4. Aktualizujeme UI a uložíme do pamäte
     setInputsFromGoals();
     localStorage.setItem('userGoals', JSON.stringify(GOALS));
     
-    // Prekreslíme aplikáciu
+    // 5. Prekreslíme aplikáciu s novými platnými hodnotami
     generateScaledPlan();
     renderGrid();
     updateAllDaySummaries();
+    
     if(document.getElementById("mealModal").classList.contains("active")) {
         openMealModal(currentMealPlan[currentMealDay][currentMealIdx]);
-    }
-}
-
-        function generateScaledPlan() {
-    currentMealPlan = {};
-    
-    // 1. Zistíme, aké sú pomery jednotlivých makier voči základu
-    let rPro = GOALS.pro / BASE_GOALS.pro;
-    let rCarb = GOALS.carb / BASE_GOALS.carb;
-    let rFat = GOALS.fat / BASE_GOALS.fat;
-    let rCal = GOALS.cal / BASE_GOALS.cal;
-
-    for (let day = 1; day <= 7; day++) {
-        currentMealPlan[day] = [];
-        
-        // FÁZA 1: Analýza základných kalórií dňa z náhodne vytiahnutých receptov
-        let dayCustomCals = 0;
-        let proBaseCals = 0;
-        let carbBaseCals = 0;
-        let fatBaseCals = 0;
-        let otherBaseCals = 0;
-
-        for (let mIdx = 0; mIdx <= 4; mIdx++) {
-            let poolIdx = chosenMealsTimeline[day][mIdx];
-            let mealBlueprint = pools[mIdx][poolIdx];
-            
-            let cID = `d${day}_m${mIdx}`;
-            if (customFoods[cID]) {
-                customFoods[cID].forEach(cf => { dayCustomCals += cf.cal; });
-            }
-
-            mealBlueprint.ing.forEach(i => {
-                let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
-                if(match) {
-                    let cat = getCategory(match[3]);
-                    if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') proBaseCals += i.cal;
-                    else if (cat === '🍞 Prílohy a Pečivo') carbBaseCals += i.cal;
-                    else if (cat === '🥜 Tuky, Orechy a Semená') fatBaseCals += i.cal;
-                    else otherBaseCals += i.cal;
-                } else {
-                    otherBaseCals += i.cal;
-                }
-            });
-        }
-
-        // FÁZA 2: Výpočet "zostatkového" pomeru pre nechránené suroviny
-        let budgetCals = GOALS.cal - dayCustomCals;
-        if (budgetCals < 0) budgetCals = 0;
-
-        // Zistíme "ťahúňa" - ktoré makro si navýšil najviac? (To budeme chrániť)
-        let maxR = Math.max(rPro, rCarb, rFat);
-        
-        let finalRPro = rPro;
-        let finalRCarb = rCarb;
-        let finalRFat = rFat;
-        let finalROther = rCal;
-
-        // Matematika pevného rozpočtu: Ochránime ťahúňa a zvyšok scvrkneme/natiahneme do limitu
-        if (maxR === rPro) {
-            let usedCals = proBaseCals * rPro;
-            let remaining = budgetCals - usedCals;
-            let baseRemaining = carbBaseCals + fatBaseCals + otherBaseCals;
-            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
-            
-            finalRCarb = adaptRatio; finalRFat = adaptRatio; finalROther = adaptRatio;
-        } else if (maxR === rCarb) {
-            let usedCals = carbBaseCals * rCarb;
-            let remaining = budgetCals - usedCals;
-            let baseRemaining = proBaseCals + fatBaseCals + otherBaseCals;
-            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
-            
-            finalRPro = adaptRatio; finalRFat = adaptRatio; finalROther = adaptRatio;
-        } else {
-            let usedCals = fatBaseCals * rFat;
-            let remaining = budgetCals - usedCals;
-            let baseRemaining = proBaseCals + carbBaseCals + otherBaseCals;
-            let adaptRatio = baseRemaining > 0 ? (remaining > 0 ? remaining / baseRemaining : 0.1) : rCal;
-            
-            finalRPro = adaptRatio; finalRCarb = adaptRatio; finalROther = adaptRatio;
-        }
-
-        // FÁZA 3: Aplikovanie nových inteligentných pomerov priamo do ingrediencií jedál
-        for (let mIdx = 0; mIdx <= 4; mIdx++) {
-            let poolIdx = chosenMealsTimeline[day][mIdx];
-            let mealBlueprint = pools[mIdx][poolIdx];
-            let mealCopy = JSON.parse(JSON.stringify(mealBlueprint));
-            
-            mealCopy.day = day; mealCopy.mIdx = mIdx;
-            let cID = `d${day}_m${mIdx}`;
-            
-            if (customFoods[cID]) {
-                let cfCopy = JSON.parse(JSON.stringify(customFoods[cID]));
-                cfCopy.forEach(cf => { cf.isCustom = true; });
-                mealCopy.ing = mealCopy.ing.concat(cfCopy);
-            }
-
-            mealCopy.cal = 0; mealCopy.pro = 0; mealCopy.carb = 0; mealCopy.fat = 0; mealCopy.fib = 0;
-
-            mealCopy.ing.forEach(i => {
-                if(!i.isCustom) {
-                    let match = i.text.match(/^([0-9.,]+)\s+([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]+)\s+(.+)$/);
-                    let effectiveRatio = finalROther;
-                    
-                    if(match) {
-                        let qty = parseFloat(match[1].replace(',', '.'));
-                        let unit = match[2];
-                        let name = match[3];
-                        let cat = getCategory(name);
-                        
-                        let specificRatio = finalROther;
-                        if (cat === '🥩 Mäso a Ryby' || cat === '🥛 Mliečne výrobky a Vajcia') specificRatio = finalRPro;
-                        else if (cat === '🍞 Prílohy a Pečivo') specificRatio = finalRCarb;
-                        else if (cat === '🥜 Tuky, Orechy a Semená') specificRatio = finalRFat;
-
-                        let finalQty = qty * specificRatio;
-                        let lowerUnit = unit.toLowerCase();
-
-                        // Pekné zaokrúhľovanie jednotiek
-                        if (lowerUnit === 'ks') {
-                            finalQty = Math.round(finalQty);
-                            if (finalQty === 0 && qty > 0) finalQty = 1;
-                        } else if (lowerUnit === 'g' || lowerUnit === 'ml') {
-                            finalQty = Math.round(finalQty);
-                        } else if (lowerUnit === 'čl' || lowerUnit === 'pl' || lowerUnit === 'hrsť') {
-                            finalQty = Math.round(finalQty * 2) / 2;
-                            if (finalQty === 0) finalQty = 0.5;
-                        } else {
-                            finalQty = +(finalQty).toFixed(1);
-                        }
-
-                        effectiveRatio = finalQty / qty;
-                        i.text = `${finalQty} ${unit} ${name}`;
-                    }
-                    
-                    // Aplikácia vypočítaného pomeru na nutričné hodnoty
-                    i.cal = Math.round(i.cal * effectiveRatio);
-                    i.pro = Math.round(i.pro * effectiveRatio);
-                    i.carb = Math.round(i.carb * effectiveRatio);
-                    i.fat = Math.round(i.fat * effectiveRatio);
-                    i.fib = Math.round(i.fib * effectiveRatio);
-                }
-                
-                mealCopy.cal += i.cal; mealCopy.pro += i.pro; mealCopy.carb += i.carb; 
-                mealCopy.fat += i.fat; mealCopy.fib += i.fib;
-            });
-            
-            currentMealPlan[day].push(mealCopy);
-        }
     }
 }
 
