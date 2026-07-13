@@ -747,7 +747,7 @@ let pinnedDay = loadStorage('pinnedDay', null);
                         ${nazvyDni[day - 1]}
                     </div>
                     <div class="day-action-icons" style="justify-content: center; align-items: center;">
-                        <input type="checkbox" title="${isPinned ? 'Odopnúť' : 'Pripnúť na vrch'}" style="cursor: pointer; width: 22px; height: 22px; margin: 0; accent-color: var(--primary);" ${isPinned ? 'checked' : ''} onchange="togglePinDay(${day}, this.checked)">
+                        <button class="icon-btn-small" onclick="togglePinDay(${day}, ${!isPinned})" title="${isPinned ? 'Odopnúť' : 'Pripnúť na vrch'}" style="${isPinned ? 'border-color: #ef4444; background: #fef2f2; opacity: 1; filter: grayscale(0%);' : 'opacity: 0.6; filter: grayscale(100%);'} font-size: 1rem;">📌</button>
                         <button class="icon-btn-small" onclick="reloadWholeDay(${day})" title="Nové náhodné jedlá na celý deň">🔄</button>
                         <button class="icon-btn-small" onclick="addWholeDayToCart(${day})" title="Pridať celý deň do nákupu">🛒</button>
                     </div>`;
