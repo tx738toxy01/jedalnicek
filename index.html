@@ -396,7 +396,6 @@
         }
 
         function updateLockUI() {
-            // Vlastné nakreslené SVG ikony
             const svgLocked = `
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="#ef4444" style="vertical-align: middle; margin-bottom: 2px; filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.4)); transition: 0.3s;">
                     <path d="M17 10V7c0-2.8-2.2-5-5-5S7 4.2 7 7v3H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V12c0-1.1-.9-2-2-2h-2zm-5 7c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-7H9V7c0-1.7 1.3-3 3-3s3 1.3 3 3v3h6z"/>
@@ -413,13 +412,19 @@
             Object.keys(lockedGoals).forEach(type => {
                 let lockEl = document.getElementById(`lock-${type}`);
                 let groupEl = document.getElementById(`group-${type}`);
-                if (lockEl && groupEl) {
-                    // Dosadenie správneho SVGčka podľa stavu
+                let inputEl = document.getElementById(`goal-${type}`); // Zameranie sa na vstupne políčko
+                
+                if (lockEl && groupEl && inputEl) {
                     lockEl.innerHTML = lockedGoals[type] ? svgLocked : svgUnlocked;
-                    
-                    // Zvýraznenie celého okienka pri zamknutí
                     groupEl.style.borderStyle = lockedGoals[type] ? "solid" : "dashed";
                     groupEl.style.borderColor = lockedGoals[type] ? "var(--primary)" : "transparent";
+                    
+                    // TU JE ZMENA: Ak odomkneš, číslo zmizne. Ak zamkneš, číslo sa vráti.
+                    if (!lockedGoals[type]) {
+                        inputEl.value = "";
+                    } else {
+                        inputEl.value = GOALS[type];
+                    }
                 }
             });
         }
@@ -549,8 +554,7 @@ let pinnedDay = loadStorage('pinnedDay', null);
             let originalTimeline = JSON.parse(JSON.stringify(chosenMealsTimeline));
             if (!chosenMealsTimeline[day]) chosenMealsTimeline[day] = [0,0,0,0,0];
 
-            // Zvýšené na 300 pokusov pre dokonalejšie hľadanie pri prísnych zámkoch
-            for(let i = 0; i < 300; i++) {
+            for(let i = 0; i < 500; i++) {
                 let testCombo = [];
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
                     testCombo.push(Math.floor(Math.random() * pools[mIdx].length));
@@ -564,16 +568,20 @@ let pinnedDay = loadStorage('pinnedDay', null);
                     sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
                 });
                 
-                // Ak je makro ZAMKNUTÉ (true), odchýlka sa násobí 10000 (absolútna priorita).
-                // Ak je ODOMKNUTÉ (false), odchýlka sa násobí 0.01 (takmer žiadna priorita, voľné pre vyrovnávanie).
-                
-                let calDiff = Math.abs(sums.cal - GOALS.cal) * (lockedGoals.cal ? 10000 : 0.01);
-                let proDiff = Math.abs(sums.pro - GOALS.pro) * 4 * (lockedGoals.pro ? 10000 : 0.01);
-                let carbDiff = Math.abs(sums.carb - GOALS.carb) * 4 * (lockedGoals.carb ? 10000 : 0.01);
-                let fatDiff = Math.abs(sums.fat - GOALS.fat) * 9 * (lockedGoals.fat ? 10000 : 0.01);
-                let fibDiff = Math.abs(sums.fib - GOALS.fib) * 4 * (lockedGoals.fib ? 10000 : 0.01);
+                // TU JE ZMENA: Výpočet chýb je v percentách (0.1 znamená 10% mimo cieľa). 
+                // Tým pádom malá vláknina už nebude valcovaná veľkými kalóriami.
+                let calPct = Math.abs(sums.cal - GOALS.cal) / GOALS.cal;
+                let proPct = Math.abs(sums.pro - GOALS.pro) / GOALS.pro;
+                let carbPct = Math.abs(sums.carb - GOALS.carb) / GOALS.carb;
+                let fatPct = Math.abs(sums.fat - GOALS.fat) / GOALS.fat;
+                let fibPct = Math.abs(sums.fib - GOALS.fib) / GOALS.fib;
 
-                let diff = calDiff + proDiff + carbDiff + fatDiff + fibDiff;
+                let diff = 0;
+                diff += calPct * (lockedGoals.cal ? 10000 : 1);
+                diff += proPct * (lockedGoals.pro ? 10000 : 1);
+                diff += carbPct * (lockedGoals.carb ? 10000 : 1);
+                diff += fatPct * (lockedGoals.fat ? 10000 : 1);
+                diff += fibPct * (lockedGoals.fib ? 10000 : 1);
                            
                 if(diff < bestDiff) {
                     bestDiff = diff;
@@ -672,10 +680,11 @@ let pinnedDay = loadStorage('pinnedDay', null);
 
         function generateScaledPlan() {
             currentMealPlan = {};
-            let rPro = GOALS.pro / BASE_GOALS.pro || 1;
-            let rCarb = GOALS.carb / BASE_GOALS.carb || 1;
-            let rFat = GOALS.fat / BASE_GOALS.fat || 1;
             let rCal = GOALS.cal / BASE_GOALS.cal || 1;
+            // Ak je makro zamknuté, tvrdo držíme jeho cieľ. Ak je odomknuté, necháme mu prirodzený pomer podľa kalórií.
+            let rPro = lockedGoals.pro ? (GOALS.pro / BASE_GOALS.pro || 1) : rCal;
+            let rCarb = lockedGoals.carb ? (GOALS.carb / BASE_GOALS.carb || 1) : rCal;
+            let rFat = lockedGoals.fat ? (GOALS.fat / BASE_GOALS.fat || 1) : rCal;
 
             for (let day = 1; day <= 7; day++) {
                 currentMealPlan[day] = [];
@@ -876,43 +885,63 @@ let pinnedDay = loadStorage('pinnedDay', null);
 }
 
         function updateAllDaySummaries() {
-    // Pomocná funkcia na určenie ikony podľa percentuálneho plnenia cieľa
-    function getStatusIcon(current, goal) {
-        if (!goal) return "";
-        let pct = (current / goal) * 100;
-        
-        if (pct >= 95 && pct <= 105) {
-            return `<span style="margin-left: 6px; font-weight: bold;">✅</span>`;
-        } else if (pct > 105 && pct <= 110) {
-            return `<span style="color: #f97316; font-weight: bold; margin-left: 6px; font-size: 1.05rem;" title="Prekročené o 5 až 10%">❗</span>`;
-        } else if (pct > 110) {
-            return `<span style="color: #ef4444; font-weight: bold; margin-left: 6px; font-size: 1.15rem;" title="Kriticky prekročené nad 10%">❗</span>`;
-        }
-        return "";
-    }
-
-    for (let day = 1; day <= 7; day++) {
-        let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
-        if (currentMealPlan[day]) {
-            currentMealPlan[day].forEach(meal => {
-                if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
-                    sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
+            function getStatusIcon(current, goal) {
+                if (!goal) return "";
+                let pct = (current / goal) * 100;
+                
+                // Hodnotenie presnosti úspechu
+                if (pct >= 95 && pct <= 105) {
+                    return `<span style="margin-left: 6px; font-weight: bold;">✅</span>`;
+                } else if (pct > 105 && pct <= 110) {
+                    return `<span style="color: #f97316; font-weight: bold; margin-left: 6px; font-size: 1.05rem;" title="Prekročené o 5 až 10%">❗</span>`;
+                } else if (pct > 110 || pct < 95) {
+                    return `<span style="color: #ef4444; font-weight: bold; margin-left: 6px; font-size: 1.15rem;" title="Mimo cieľ!">❗</span>`;
                 }
-            });
+                return "";
+            }
+
+            for (let day = 1; day <= 7; day++) {
+                let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 }; // To, čo si reálne zjedol
+                let planned = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 }; // To, čo ti na dnes naplánoval algoritmus
+
+                if (currentMealPlan[day]) {
+                    currentMealPlan[day].forEach(meal => {
+                        // Sčítame celkový denný plán od algoritmu
+                        planned.cal += meal.cal; 
+                        planned.pro += meal.pro; 
+                        planned.carb += meal.carb; 
+                        planned.fat += meal.fat; 
+                        planned.fib += meal.fib;
+
+                        // Sčítame len to, čo si odškrtol ako "Zjedol som"
+                        if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
+                            sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
+                        }
+                    });
+                }
+
+                // DYNAMICKÉ CIELE: 
+                // Ak je makro ZAMKNUTÉ, cieľom je prísna hodnota zhora (GOALS).
+                // Ak je ODOMKNUTÉ, cieľom je to, čo ti na ten deň vypočítal algoritmus (planned).
+                let tCal = lockedGoals.cal ? GOALS.cal : planned.cal;
+                let tPro = lockedGoals.pro ? GOALS.pro : planned.pro;
+                let tCarb = lockedGoals.carb ? GOALS.carb : planned.carb;
+                let tFat = lockedGoals.fat ? GOALS.fat : planned.fat;
+                let tFib = lockedGoals.fib ? GOALS.fib : planned.fib;
+
+                let sCell = document.getElementById(`summary_d${day}`);
+                if (sCell) {
+                    sCell.innerHTML = `
+                        <div class="summary-title">Spolu: ${sums.cal} / ${tCal} kcal</div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.cal/tCal)*100,100)}%; background:var(--primary-light);"></div><span class="mpt-label">🔥 Kcal</span><span class="mpt-value">${sums.cal}/${tCal}${getStatusIcon(sums.cal, tCal)}</span></div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.pro/tPro)*100,100)}%; background:var(--secondary-light);"></div><span class="mpt-label">🥩 Pro</span><span class="mpt-value">${sums.pro}/${tPro}g${getStatusIcon(sums.pro, tPro)}</span></div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.carb/tCarb)*100,100)}%; background:var(--blue-light);"></div><span class="mpt-label">🍞 Sac</span><span class="mpt-value">${sums.carb}/${tCarb}g${getStatusIcon(sums.carb, tCarb)}</span></div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fat/tFat)*100,100)}%; background:var(--yellow-light);"></div><span class="mpt-label">🥑 Tuk</span><span class="mpt-value">${sums.fat}/${tFat}g${getStatusIcon(sums.fat, tFat)}</span></div>
+                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fib/tFib)*100,100)}%; background:#e7e5e4;"></div><span class="mpt-label">🌾 Vlák</span><span class="mpt-value">${sums.fib}/${tFib}g${getStatusIcon(sums.fib, tFib)}</span></div>
+                    `;
+                }
+            }
         }
-        let sCell = document.getElementById(`summary_d${day}`);
-        if (sCell) {
-            sCell.innerHTML = `
-                <div class="summary-title">Spolu: ${sums.cal} / ${GOALS.cal} kcal</div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.cal/GOALS.cal)*100,100)}%; background:var(--primary-light);"></div><span class="mpt-label">🔥 Kcal</span><span class="mpt-value">${sums.cal}/${GOALS.cal}${getStatusIcon(sums.cal, GOALS.cal)}</span></div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.pro/GOALS.pro)*100,100)}%; background:var(--secondary-light);"></div><span class="mpt-label">🥩 Pro</span><span class="mpt-value">${sums.pro}/${GOALS.pro}g${getStatusIcon(sums.pro, GOALS.pro)}</span></div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.carb/GOALS.carb)*100,100)}%; background:var(--blue-light);"></div><span class="mpt-label">🍞 Sac</span><span class="mpt-value">${sums.carb}/${GOALS.carb}g${getStatusIcon(sums.carb, GOALS.carb)}</span></div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fat/GOALS.fat)*100,100)}%; background:var(--yellow-light);"></div><span class="mpt-label">🥑 Tuk</span><span class="mpt-value">${sums.fat}/${GOALS.fat}g${getStatusIcon(sums.fat, GOALS.fat)}</span></div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fib/GOALS.fib)*100,100)}%; background:#e7e5e4;"></div><span class="mpt-label">🌾 Vlák</span><span class="mpt-value">${sums.fib}/${GOALS.fib}g${getStatusIcon(sums.fib, GOALS.fib)}</span></div>
-            `;
-        }
-    }
-}
 
         function openMealModalByIDs(day, mIdx) { openMealModal(currentMealPlan[day][mIdx]); }
 
