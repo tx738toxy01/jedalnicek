@@ -511,6 +511,11 @@ let pinnedDay = loadStorage('pinnedDay', null);
                 }
             }
             localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
+            
+            // TU JE ZMENA: Kompletné premazanie stavov "zjedol som / nezjedol som" v pamäti aplikácie aj v localStorage
+            mealStatuses = {};
+            localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
+
             if (shouldReloadPage) location.reload();
         }
 
@@ -687,12 +692,18 @@ let pinnedDay = loadStorage('pinnedDay', null);
                 
                 if (currentMealPlan[day]) {
                     currentMealPlan[day].forEach(meal => {
-                        let cell = document.createElement("div"); cell.className = "meal-cell"; cell.id = `cell_d${meal.day}_m${meal.mIdx}`;
+                        let cell = document.createElement("div"); 
+                        cell.className = "meal-cell"; 
+                        cell.id = `cell_d${meal.day}_m${meal.mIdx}`;
+                        
+                        // TU JE ZMENA: Akcia kliknutia sa pridáva priamo na celú bunku
+                        cell.onclick = () => openMealModalByIDs(meal.day, meal.mIdx);
+                        
                         let isEaten = mealStatuses[`d${meal.day}_m${meal.mIdx}`] === 'eaten';
                         cell.innerHTML = `
-                            <input type="checkbox" title="Zjedol som" style="cursor: pointer; width: 22px; height: 22px; margin: 0; accent-color: #16a34a; position: absolute; top: 12px; right: 12px; z-index: 5;" ${isEaten ? 'checked' : ''} onclick="event.stopPropagation(); toggleMealEatenQuick(${meal.day}, ${meal.mIdx}, this.checked)">
-                            <div class="meal-cell-top" onclick="openMealModalByIDs(${meal.day}, ${meal.mIdx})">
-                                <div class="meal-cell-title" style="padding-right: 30px;">${escapeHTML(meal.title)}</div>
+                            <input type="checkbox" title="Zjedol som" style="cursor: pointer; width: 22px; height: 22px; margin: 0; accent-color: #16a34a; position: absolute; bottom: 12px; left: 12px; z-index: 5;" ${isEaten ? 'checked' : ''} onclick="event.stopPropagation(); toggleMealEatenQuick(${meal.day}, ${meal.mIdx}, this.checked)">
+                            <div class="meal-cell-top">
+                                <div class="meal-cell-title">${escapeHTML(meal.title)}</div>
                                 <div class="meal-cell-macros" style="line-height: 1.5; margin-top: 4px;">
                                     🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g<br>
                                     🍞 ${meal.carb}g | 🥑 ${meal.fat}g | 🌾 ${meal.fib}g
@@ -792,6 +803,21 @@ let pinnedDay = loadStorage('pinnedDay', null);
 }
 
         function updateAllDaySummaries() {
+    // Pomocná funkcia na určenie ikony podľa percentuálneho plnenia cieľa
+    function getStatusIcon(current, goal) {
+        if (!goal) return "";
+        let pct = (current / goal) * 100;
+        
+        if (pct >= 95 && pct <= 105) {
+            return `<span style="margin-left: 6px; font-weight: bold;">✅</span>`;
+        } else if (pct > 105 && pct <= 110) {
+            return `<span style="color: #f97316; font-weight: bold; margin-left: 6px; font-size: 1.05rem;" title="Prekročené o 5 až 10%">❗</span>`;
+        } else if (pct > 110) {
+            return `<span style="color: #ef4444; font-weight: bold; margin-left: 6px; font-size: 1.15rem;" title="Kriticky prekročené nad 10%">❗</span>`;
+        }
+        return "";
+    }
+
     for (let day = 1; day <= 7; day++) {
         let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
         if (currentMealPlan[day]) {
@@ -805,11 +831,11 @@ let pinnedDay = loadStorage('pinnedDay', null);
         if (sCell) {
             sCell.innerHTML = `
                 <div class="summary-title">Spolu: ${sums.cal} / ${GOALS.cal} kcal</div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.cal/GOALS.cal)*100,100)}%; background:var(--primary-light);"></div><span class="mpt-label">🔥 Kcal</span><span class="mpt-value">${sums.cal}/${GOALS.cal}</span></div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.pro/GOALS.pro)*100,100)}%; background:var(--secondary-light);"></div><span class="mpt-label">🥩 Pro</span><span class="mpt-value">${sums.pro}/${GOALS.pro}g</span></div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.carb/GOALS.carb)*100,100)}%; background:var(--blue-light);"></div><span class="mpt-label">🍞 Sac</span><span class="mpt-value">${sums.carb}/${GOALS.carb}g</span></div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fat/GOALS.fat)*100,100)}%; background:var(--yellow-light);"></div><span class="mpt-label">🥑 Tuk</span><span class="mpt-value">${sums.fat}/${GOALS.fat}g</span></div>
-                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fib/GOALS.fib)*100,100)}%; background:#e7e5e4;"></div><span class="mpt-label">🌾 Vlák</span><span class="mpt-value">${sums.fib}/${GOALS.fib}g</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.cal/GOALS.cal)*100,100)}%; background:var(--primary-light);"></div><span class="mpt-label">🔥 Kcal</span><span class="mpt-value">${sums.cal}/${GOALS.cal}${getStatusIcon(sums.cal, GOALS.cal)}</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.pro/GOALS.pro)*100,100)}%; background:var(--secondary-light);"></div><span class="mpt-label">🥩 Pro</span><span class="mpt-value">${sums.pro}/${GOALS.pro}g${getStatusIcon(sums.pro, GOALS.pro)}</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.carb/GOALS.carb)*100,100)}%; background:var(--blue-light);"></div><span class="mpt-label">🍞 Sac</span><span class="mpt-value">${sums.carb}/${GOALS.carb}g${getStatusIcon(sums.carb, GOALS.carb)}</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fat/GOALS.fat)*100,100)}%; background:var(--yellow-light);"></div><span class="mpt-label">🥑 Tuk</span><span class="mpt-value">${sums.fat}/${GOALS.fat}g${getStatusIcon(sums.fat, GOALS.fat)}</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fib/GOALS.fib)*100,100)}%; background:#e7e5e4;"></div><span class="mpt-label">🌾 Vlák</span><span class="mpt-value">${sums.fib}/${GOALS.fib}g${getStatusIcon(sums.fib, GOALS.fib)}</span></div>
             `;
         }
     }
