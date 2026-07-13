@@ -400,8 +400,11 @@
                 let lockEl = document.getElementById(`lock-${type}`);
                 let groupEl = document.getElementById(`group-${type}`);
                 if (lockEl && groupEl) {
-                    lockEl.innerText = lockedGoals[type] ? "🔒" : "🔓";
-                    // Ak je uzamknuté, zvýrazníme celé okienko plnou čiarou
+                    // Extrémne vizuálne odlíšenie zámku (sivý/priesvitný vs. plnofarebný)
+                    lockEl.innerHTML = lockedGoals[type] 
+                        ? '<span style="opacity: 1; filter: grayscale(0%); color: #ef4444;">🔒</span>' 
+                        : '<span style="opacity: 0.4; filter: grayscale(100%);">🔓</span>';
+                    
                     groupEl.style.borderStyle = lockedGoals[type] ? "solid" : "dashed";
                     groupEl.style.borderColor = lockedGoals[type] ? "var(--primary)" : "transparent";
                 }
@@ -548,20 +551,14 @@ let pinnedDay = loadStorage('pinnedDay', null);
                     sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
                 });
                 
-                // Základné výpočty odchýlok
-                let calDiff = Math.abs(sums.cal - GOALS.cal);
-                let proDiff = Math.abs(sums.pro - GOALS.pro) * 4;
-                let carbDiff = Math.abs(sums.carb - GOALS.carb) * 4;
-                let fatDiff = Math.abs(sums.fat - GOALS.fat) * 9;
-                let fibDiff = Math.abs(sums.fib - GOALS.fib) * 4;
-
-                // TU JE KĽÚČOVÁ ZMENA: Ak je makro zamknuté, akákoľvek chyba dostane 1000-násobnú penalizáciu.
-                // Algoritmus radšej obetuje presnosť odomknutých makier, len aby vyhovel zamknutému.
-                if (lockedGoals.cal) calDiff *= 1000;
-                if (lockedGoals.pro) proDiff *= 1000;
-                if (lockedGoals.carb) carbDiff *= 1000;
-                if (lockedGoals.fat) fatDiff *= 1000;
-                if (lockedGoals.fib) fibDiff *= 1000;
+                // Ak je makro ZAMKNUTÉ (true), odchýlka sa násobí 10000 (absolútna priorita).
+                // Ak je ODOMKNUTÉ (false), odchýlka sa násobí 0.01 (takmer žiadna priorita, voľné pre vyrovnávanie).
+                
+                let calDiff = Math.abs(sums.cal - GOALS.cal) * (lockedGoals.cal ? 10000 : 0.01);
+                let proDiff = Math.abs(sums.pro - GOALS.pro) * 4 * (lockedGoals.pro ? 10000 : 0.01);
+                let carbDiff = Math.abs(sums.carb - GOALS.carb) * 4 * (lockedGoals.carb ? 10000 : 0.01);
+                let fatDiff = Math.abs(sums.fat - GOALS.fat) * 9 * (lockedGoals.fat ? 10000 : 0.01);
+                let fibDiff = Math.abs(sums.fib - GOALS.fib) * 4 * (lockedGoals.fib ? 10000 : 0.01);
 
                 let diff = calDiff + proDiff + carbDiff + fatDiff + fibDiff;
                            
