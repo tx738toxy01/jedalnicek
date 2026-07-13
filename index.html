@@ -572,7 +572,7 @@ let pinnedDay = loadStorage('pinnedDay', null);
             let originalTimeline = JSON.parse(JSON.stringify(chosenMealsTimeline));
             if (!chosenMealsTimeline[day]) chosenMealsTimeline[day] = [0,0,0,0,0];
 
-            for(let i = 0; i < 500; i++) {
+            for(let i = 0; i < 200; i++) {
                 let testCombo = [];
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
                     testCombo.push(Math.floor(Math.random() * pools[mIdx].length));
@@ -586,15 +586,30 @@ let pinnedDay = loadStorage('pinnedDay', null);
                     sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
                 });
                 
-                // TU JE ZMENA: Výpočet chýb je v percentách (0.1 znamená 10% mimo cieľa). 
-                // Tým pádom malá vláknina už nebude valcovaná veľkými kalóriami.
                 let diff = 0;
                 
+                // Základná penalizácia za nedodržanie zamknutých makier
                 if (lockedGoals.cal && GOALS.cal) diff += Math.abs(sums.cal - GOALS.cal) / GOALS.cal;
                 if (lockedGoals.pro && GOALS.pro) diff += Math.abs(sums.pro - GOALS.pro) / GOALS.pro;
                 if (lockedGoals.carb && GOALS.carb) diff += Math.abs(sums.carb - GOALS.carb) / GOALS.carb;
                 if (lockedGoals.fat && GOALS.fat) diff += Math.abs(sums.fat - GOALS.fat) / GOALS.fat;
                 if (lockedGoals.fib && GOALS.fib) diff += Math.abs(sums.fib - GOALS.fib) / GOALS.fib;
+                
+                // POKUTA ZA NUDU: 
+                // Ak sa nejaký chod zhoduje s tým, čo si už jedol v predchádzajúce dni,
+                // dostane to brutálnu prirážku (+0.5). To donúti apku vyberať iné jedlá!
+                let reusePenalty = 0;
+                for (let prevDay = 1; prevDay < day; prevDay++) {
+                    if (chosenMealsTimeline[prevDay]) {
+                        for(let m = 0; m <= 4; m++) {
+                            if (chosenMealsTimeline[prevDay][m] === testCombo[m]) {
+                                reusePenalty += 0.5; 
+                            }
+                        }
+                    }
+                }
+                
+                diff += reusePenalty;
                            
                 if(diff < bestDiff) {
                     bestDiff = diff;
@@ -667,12 +682,46 @@ let pinnedDay = loadStorage('pinnedDay', null);
 
         function generateScaledPlan() {
             currentMealPlan = {};
-            let rCal = GOALS.cal / BASE_GOALS.cal || 1;
-            // Ak je makro zamknuté, tvrdo držíme jeho cieľ. Ak je odomknuté, necháme mu prirodzený pomer podľa kalórií.
-            let rPro = lockedGoals.pro ? (GOALS.pro / BASE_GOALS.pro || 1) : rCal;
-            let rCarb = lockedGoals.carb ? (GOALS.carb / BASE_GOALS.carb || 1) : rCal;
-            let rFat = lockedGoals.fat ? (GOALS.fat / BASE_GOALS.fat || 1) : rCal;
+            
+            // 1. Zistíme ciele. Ak je niečo vymazané/odomknuté, použijeme záchytný bod z BASE_GOALS
+            let targetPro = lockedGoals.pro && GOALS.pro ? GOALS.pro : BASE_GOALS.pro;
+            let targetCarb = lockedGoals.carb && GOALS.carb ? GOALS.carb : BASE_GOALS.carb;
+            let targetFat = lockedGoals.fat && GOALS.fat ? GOALS.fat : BASE_GOALS.fat;
+            let targetCal = lockedGoals.cal && GOALS.cal ? GOALS.cal : BASE_GOALS.cal;
 
+            let rPro = targetPro / BASE_GOALS.pro;
+            let rCarb = targetCarb / BASE_GOALS.carb;
+            let rFat = targetFat / BASE_GOALS.fat;
+
+            // 2. Ak si ZAMKOL kalórie, odomknuté makrá musíme stlačiť/roztiahnuť tak, aby kalórie presne sedeli!
+            if (lockedGoals.cal) {
+                let lockedCals = 0;
+                if (lockedGoals.pro) lockedCals += (targetPro * 4);
+                if (lockedGoals.carb) lockedCals += (targetCarb * 4);
+                if (lockedGoals.fat) lockedCals += (targetFat * 9);
+
+                let remainingCals = targetCal - lockedCals;
+                if (remainingCals < 0) remainingCals = 0;
+
+                let defaultUnlockedCals = 0;
+                if (!lockedGoals.pro) defaultUnlockedCals += (BASE_GOALS.pro * 4);
+                if (!lockedGoals.carb) defaultUnlockedCals += (BASE_GOALS.carb * 4);
+                if (!lockedGoals.fat) defaultUnlockedCals += (BASE_GOALS.fat * 9);
+
+                let flexRatio = defaultUnlockedCals > 0 ? (remainingCals / defaultUnlockedCals) : 1;
+
+                if (!lockedGoals.pro) rPro = flexRatio;
+                if (!lockedGoals.carb) rCarb = flexRatio;
+                if (!lockedGoals.fat) rFat = flexRatio;
+            } else {
+                // Ak kalórie nie sú zamknuté, odomknuté makrá sa neškrtia
+                if (!lockedGoals.pro) rPro = 1;
+                if (!lockedGoals.carb) rCarb = 1;
+                if (!lockedGoals.fat) rFat = 1;
+            }
+
+            let rCal = targetCal / BASE_GOALS.cal;
+            
             for (let day = 1; day <= 7; day++) {
                 currentMealPlan[day] = [];
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
