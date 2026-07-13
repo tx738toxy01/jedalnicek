@@ -562,106 +562,50 @@ let pinnedDay = loadStorage('pinnedDay', null);
             document.getElementById("goal-carb").value = GOALS.carb;
             document.getElementById("goal-fat").value = GOALS.fat;
             document.getElementById("goal-fib").value = GOALS.fib;
-        }
+        }        
 
-        function findBestComboForDay(day) {
-            let bestCombo = [0, 0, 0, 0, 0];
-            let bestDiff = Infinity;
-            
-            let originalTimeline = JSON.parse(JSON.stringify(chosenMealsTimeline));
-            if (!chosenMealsTimeline[day]) chosenMealsTimeline[day] = [0,0,0,0,0];
-
-            for(let i = 0; i < 200; i++) {
-                let testCombo = [];
-                for (let mIdx = 0; mIdx <= 4; mIdx++) {
-                    testCombo.push(Math.floor(Math.random() * pools[mIdx].length));
-                }
-                
-                // Vypočíta surové (neprepočítané) makrá tohto náhodného komba
-                let baseSums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
-                for (let mIdx = 0; mIdx <= 4; mIdx++) {
-                    let meal = pools[mIdx][testCombo[mIdx]];
-                    if (meal && meal.ing) {
-                        meal.ing.forEach(ing => {
-                            if (!ing.isCustom) {
-                                baseSums.cal += ing.cal; baseSums.pro += ing.pro; 
-                                baseSums.carb += ing.carb; baseSums.fat += ing.fat; baseSums.fib += ing.fib;
-                            }
-                        });
-                    }
-                }
-                
-                let diff = 0;
-                
-                // Zisťujeme len to, či je základ jedál zhruba podobný cieľom, aby apka neznásobovala jedlo 10-krát
-                if (lockedGoals.cal && GOALS.cal) diff += Math.abs(baseSums.cal - GOALS.cal) / GOALS.cal;
-                if (lockedGoals.pro && GOALS.pro) diff += Math.abs(baseSums.pro - GOALS.pro) / GOALS.pro;
-                if (lockedGoals.carb && GOALS.carb) diff += Math.abs(baseSums.carb - GOALS.carb) / GOALS.carb;
-                if (lockedGoals.fat && GOALS.fat) diff += Math.abs(baseSums.fat - GOALS.fat) / GOALS.fat;
-                
-                // BRUTÁLNA POKUTA ZA NUDU:
-                // Ak sa jedlo už nachádza v niektorom z predošlých dní, dostane prirážku +10.0 (1000%).
-                // Apka ho tak nevyberie, pokiaľ to nebude absolútne nevyhnutné.
-                let reusePenalty = 0;
-                for (let prevDay = 1; prevDay < day; prevDay++) {
-                    if (chosenMealsTimeline[prevDay]) {
-                        for(let m = 0; m <= 4; m++) {
-                            if (chosenMealsTimeline[prevDay][m] === testCombo[m]) {
-                                reusePenalty += 10.0; 
-                            }
-                        }
-                    }
-                }
-                
-                diff += reusePenalty;
-                           
-                if(diff < bestDiff) {
-                    bestDiff = diff;
-                    bestCombo = [...testCombo];
-                }
-            }
-            
-            chosenMealsTimeline = originalTimeline;
-            return bestCombo;
-        }
-
-        // 2. VYLEPŠENÝ TÝŽDEŇ: Použije inteligentný výber pre každý deň
         function generateEntireNewWeek(shouldReloadPage = true) {
             chosenMealsTimeline = {};
-            // Príprava prázdnych polí
-            for (let day = 1; day <= 7; day++) chosenMealsTimeline[day] = [0,0,0,0,0];
-
             for (let day = 1; day <= 7; day++) {
-                chosenMealsTimeline[day] = findBestComboForDay(day);
+                let combo = [];
+                for (let mIdx = 0; mIdx <= 4; mIdx++) {
+                    let pick = Math.floor(Math.random() * pools[mIdx].length);
+                    // Rýchla kontrola, aby si nejedol to isté čo včera (ak je z čoho vyberať)
+                    if (day > 1 && chosenMealsTimeline[day-1][mIdx] === pick && pools[mIdx].length > 1) {
+                        pick = (pick + 1) % pools[mIdx].length; 
+                    }
+                    combo.push(pick);
+                }
+                chosenMealsTimeline[day] = combo;
             }
-            
             localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
-            
             mealStatuses = {};
             localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
-
             if (shouldReloadPage) location.reload();
         }
 
-        // 3. VYLEPŠENÝ DEŇ: Použije inteligentný výber len pre konkrétny deň
         function reloadWholeDay(day) {
-            if(confirm(`Chceš inteligentne vygenerovať nové jedlá pre tento deň tak, aby čo najlepšie sadli do makier? (Apka vyskúša 100 kombinácií na pozadí)`)) {
-                chosenMealsTimeline[day] = findBestComboForDay(day);
+            if(confirm(`Chceš vygenerovať úplne nové náhodné jedlá pre tento deň?`)) {
+                let combo = [];
+                for (let mIdx = 0; mIdx <= 4; mIdx++) {
+                    let pick = Math.floor(Math.random() * pools[mIdx].length);
+                    combo.push(pick);
+                }
+                chosenMealsTimeline[day] = combo;
                 
-                // Premažeme staré odškrtnuté jedlá a vlastné suroviny pre tento deň
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
                     delete mealStatuses[`d${day}_m${mIdx}`];
                     delete customFoods[`d${day}_m${mIdx}`];
                 }
-                
                 localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
                 localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
                 localStorage.setItem('customFoods', JSON.stringify(customFoods));
                 
+                // Prepočíta novú náhodu priamo na tvoje zámky
                 generateScaledPlan(); 
                 renderGrid(); 
                 updateAllDaySummaries();
-                showToast("Deň bol inteligentne pregenerovaný 🧠");
+                showToast("Deň bol úspešne pregenerovaný 🔄");
             }
         }
 
@@ -682,6 +626,11 @@ let pinnedDay = loadStorage('pinnedDay', null);
             }
             
             localStorage.setItem('userGoals', JSON.stringify(GOALS));
+            
+            // TOTO TU CHÝBALO: Okamžité prekreslenie a prepočet po zmene v políčku
+            generateScaledPlan(); 
+            renderGrid(); 
+            updateAllDaySummaries();
         }
 
         function generateScaledPlan() {
