@@ -271,11 +271,6 @@
                 <h2 id="mTitle">Názov jedla</h2>
             </div>
             <div class="macros" id="mMacros"></div>
-            
-            <div class="action-bar">
-                <button id="btnEaten" class="btn-status btn-eaten" onclick="setMealStatus('eaten')">✓ Zjedol som</button>
-                <button id="btnSkipped" class="btn-status btn-skipped" onclick="setMealStatus('skipped')">✗ Nezjedol som</button>
-            </div>
 
             <h3 style="align-items: center;">
                 Suroviny
@@ -693,9 +688,11 @@ let pinnedDay = loadStorage('pinnedDay', null);
                 if (currentMealPlan[day]) {
                     currentMealPlan[day].forEach(meal => {
                         let cell = document.createElement("div"); cell.className = "meal-cell"; cell.id = `cell_d${meal.day}_m${meal.mIdx}`;
+                        let isEaten = mealStatuses[`d${meal.day}_m${meal.mIdx}`] === 'eaten';
                         cell.innerHTML = `
+                            <input type="checkbox" title="Zjedol som" style="cursor: pointer; width: 22px; height: 22px; margin: 0; accent-color: #16a34a; position: absolute; top: 12px; right: 12px; z-index: 5;" ${isEaten ? 'checked' : ''} onclick="event.stopPropagation(); toggleMealEatenQuick(${meal.day}, ${meal.mIdx}, this.checked)">
                             <div class="meal-cell-top" onclick="openMealModalByIDs(${meal.day}, ${meal.mIdx})">
-                                <div class="meal-cell-title">${escapeHTML(meal.title)}</div>
+                                <div class="meal-cell-title" style="padding-right: 30px;">${escapeHTML(meal.title)}</div>
                                 <div class="meal-cell-macros" style="line-height: 1.5; margin-top: 4px;">
                                     🔥 ${meal.cal} kcal | 🥩 ${meal.pro}g<br>
                                     🍞 ${meal.carb}g | 🥑 ${meal.fat}g | 🌾 ${meal.fib}g
@@ -730,84 +727,93 @@ let pinnedDay = loadStorage('pinnedDay', null);
         }
 
         function filterMeals() {
-            let query = removeDiacritics(document.getElementById("searchInput").value.toLowerCase());
-            let resultsDiv = document.getElementById("searchResults");
-            resultsDiv.innerHTML = "";
-            let pool = pools[currentSearchMIdx] || [];
+    let query = removeDiacritics(document.getElementById("searchInput").value.toLowerCase());
+    let resultsDiv = document.getElementById("searchResults");
+    resultsDiv.innerHTML = "";
+    let pool = pools[currentSearchMIdx] || [];
 
-            let resultsCount = 0; // Počítadlo úspešne načítaných jedál
+    let resultsCount = 0; // Počítadlo úspešne načítaných jedál
 
-            pool.forEach((meal, idx) => {
-                try {
-                    // Ochrana pred chýbajúcimi dátami v data.js
-                    let mealTitle = meal.title || "Neznáme jedlo";
-                    let ingredients = Array.isArray(meal.ing) ? meal.ing : [];
-                    
-                    // Bezpečné spojenie textov pre vyhľadávanie
-                    let textToSearch = removeDiacritics((mealTitle + " " + ingredients.map(i => i.text || "").join(" ")).toLowerCase());
-                    
-                    if (textToSearch.includes(query)) {
-                        resultsCount++;
-                        let div = document.createElement("div"); 
-                        div.className = "search-result-item";
-                        
-                        // Bezpečné vyňatie názvov surovín
-                        let shortIng = ingredients.map(i => {
-                            let text = i.text || "";
-                            let parts = text.split(" ");
-                            return parts.length >= 3 ? parts.slice(2).join(" ") : text;
-                        }).join(", ");
+    pool.forEach((meal, idx) => {
+        try {
+            // Ochrana pred chýbajúcimi dátami v data.js
+            let mealTitle = meal.title || "Neznáme jedlo";
+            let ingredients = Array.isArray(meal.ing) ? meal.ing : [];
+            
+            // Bezpečné spojenie textov pre vyhľadávanie
+            let textToSearch = removeDiacritics((mealTitle + " " + ingredients.map(i => i.text || "").join(" ")).toLowerCase());
+            
+            if (textToSearch.includes(query)) {
+                resultsCount++;
+                let div = document.createElement("div"); 
+                div.className = "search-result-item";
+                
+                // Bezpečné vyňatie názvov surovín
+                let shortIng = ingredients.map(i => {
+                    let text = i.text || "";
+                    let parts = text.split(" ");
+                    return parts.length >= 3 ? parts.slice(2).join(" ") : text;
+                }).join(", ");
 
-                        if(!shortIng) shortIng = "Žiadne suroviny";
+                if(!shortIng) shortIng = "Žiadne suroviny";
 
-                        div.innerHTML = `<div class="search-result-title">${escapeHTML(mealTitle)}</div>
-                                         <div class="search-result-meta">🔥 ${meal.cal || 0} kcal | 🥩 ${meal.pro || 0}g Pro | Suroviny: ${escapeHTML(shortIng)}</div>`;
-                        
-                        div.onclick = () => {
-                            swapSpecificMeal(currentSearchDay, currentSearchMIdx, idx);
-                            closeModal('searchModal');
-                        };
-                        resultsDiv.appendChild(div);
-                    }
-                } catch (error) {
-                    // Ak má nejaké jedlo úplne zničenú štruktúru v data.js, preskočíme ho, ale kód nespadne
-                    console.error(`Chyba pri načítaní jedla č. ${idx}:`, error);
-                }
-            });
+                // Rýchly výpočet celkových kalórií a bielkovín zo surovín
+                let mealCal = 0;
+                let mealPro = 0;
+                ingredients.forEach(i => {
+                    mealCal += (i.cal || 0);
+                    mealPro += (i.pro || 0);
+                });
 
-            // Vykreslenie správy podľa počtu výsledkov
-            if (resultsCount === 0) {
-                resultsDiv.innerHTML = "<p style='color:var(--text-muted); font-style:italic;'>Nenašli sa žiadne jedlá vyhovujúce vyhľadávaniu.</p>";
-            } else {
-                let countInfo = document.createElement("div");
-                countInfo.style.cssText = "font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;";
-                countInfo.innerText = `Nájdených možností: ${resultsCount}`;
-                resultsDiv.insertBefore(countInfo, resultsDiv.firstChild);
+                div.innerHTML = `<div class="search-result-title">${escapeHTML(mealTitle)}</div>
+                                 <div class="search-result-meta">🔥 ${mealCal} kcal | 🥩 ${mealPro}g Pro | Suroviny: ${escapeHTML(shortIng)}</div>`;
+                
+                div.onclick = () => {
+                    swapSpecificMeal(currentSearchDay, currentSearchMIdx, idx);
+                    closeModal('searchModal');
+                };
+                resultsDiv.appendChild(div);
             }
+        } catch (error) {
+            // Ak má nejaké jedlo úplne zničenú štruktúru v data.js, preskočíme ho, ale kód nespadne
+            console.error(`Chyba pri načítaní jedla č. ${idx}:`, error);
         }
+    });
+
+    // Vykreslenie správy podľa počtu výsledkov
+    if (resultsCount === 0) {
+        resultsDiv.innerHTML = "<p style='color:var(--text-muted); font-style:italic;'>Nenašli sa žiadne jedlá vyhovujúce vyhľadávaniu.</p>";
+    } else {
+        let countInfo = document.createElement("div");
+        countInfo.style.cssText = "font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;";
+        countInfo.innerText = `Nájdených možností: ${resultsCount}`;
+        resultsDiv.insertBefore(countInfo, resultsDiv.firstChild);
+    }
+}
 
         function updateAllDaySummaries() {
-            for (let day = 1; day <= 7; day++) {
-                let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
-                if (currentMealPlan[day]) {
-                    currentMealPlan[day].forEach(meal => {
-                        if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
-                            sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
-                        }
-                    });
+    for (let day = 1; day <= 7; day++) {
+        let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
+        if (currentMealPlan[day]) {
+            currentMealPlan[day].forEach(meal => {
+                if (mealStatuses[`d${day}_m${meal.mIdx}`] === 'eaten') {
+                    sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
                 }
-                let sCell = document.getElementById(`summary_d${day}`);
-                if (sCell) {
-                    sCell.innerHTML = `
-                        <div class="summary-title">Spolu: ${sums.cal} / ${GOALS.cal} kcal</div>
-                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.cal/GOALS.cal)*100,100)}%; background:var(--primary-light);"></div><span class="mpt-label">🔥 Kcal</span><span class="mpt-value">${sums.cal}/${GOALS.cal}</span></div>
-                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.pro/GOALS.pro)*100,100)}%; background:var(--secondary-light);"></div><span class="mpt-label">🥩 Pro</span><span class="mpt-value">${sums.pro}/${GOALS.pro}g</span></div>
-                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.carb/GOALS.carb)*100,100)}%; background:var(--blue-light);"></div><span class="mpt-label">🍞 Sac</span><span class="mpt-value">${sums.carb}/${GOALS.carb}g</span></div>
-                        <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fat/GOALS.fat)*100,100)}%; background:var(--yellow-light);"></div><span class="mpt-label">🥑 Tuk</span><span class="mpt-value">${sums.fat}/${GOALS.fat}g</span></div>
-                    `;
-                }
-            }
+            });
         }
+        let sCell = document.getElementById(`summary_d${day}`);
+        if (sCell) {
+            sCell.innerHTML = `
+                <div class="summary-title">Spolu: ${sums.cal} / ${GOALS.cal} kcal</div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.cal/GOALS.cal)*100,100)}%; background:var(--primary-light);"></div><span class="mpt-label">🔥 Kcal</span><span class="mpt-value">${sums.cal}/${GOALS.cal}</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.pro/GOALS.pro)*100,100)}%; background:var(--secondary-light);"></div><span class="mpt-label">🥩 Pro</span><span class="mpt-value">${sums.pro}/${GOALS.pro}g</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.carb/GOALS.carb)*100,100)}%; background:var(--blue-light);"></div><span class="mpt-label">🍞 Sac</span><span class="mpt-value">${sums.carb}/${GOALS.carb}g</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fat/GOALS.fat)*100,100)}%; background:var(--yellow-light);"></div><span class="mpt-label">🥑 Tuk</span><span class="mpt-value">${sums.fat}/${GOALS.fat}g</span></div>
+                <div class="macro-progress-text"><div class="mpt-fill" style="width:${Math.min((sums.fib/GOALS.fib)*100,100)}%; background:#e7e5e4;"></div><span class="mpt-label">🌾 Vlák</span><span class="mpt-value">${sums.fib}/${GOALS.fib}g</span></div>
+            `;
+        }
+    }
+}
 
         function openMealModalByIDs(day, mIdx) { openMealModal(currentMealPlan[day][mIdx]); }
 
@@ -817,11 +823,7 @@ let pinnedDay = loadStorage('pinnedDay', null);
             document.getElementById("mMacros").innerHTML = `
                 <span class="macro-badge bg-cal">🔥 ${meal.cal} kcal</span><span class="macro-badge bg-pro">🥩 ${meal.pro}g Pro</span>
                 <span class="macro-badge bg-carb">🍞 ${meal.carb}g Sac</span><span class="macro-badge bg-fat">🥑 ${meal.fat}g Tuk</span><span class="macro-badge bg-fib">🌾 ${meal.fib}g Vlák</span>`;
-            
-            let status = mealStatuses[currentMealId];
-            document.getElementById("btnEaten").className = "btn-status btn-eaten" + (status === 'eaten' ? " active" : "");
-            document.getElementById("btnSkipped").className = "btn-status btn-skipped" + (status === 'skipped' ? " active" : "");
-
+                        
             let ingList = document.getElementById("mIngredients"); ingList.innerHTML = "";
             meal.ing.forEach((item, iIdx) => {
                 let id = `d${meal.day}_m${meal.mIdx}_i${iIdx}`;
@@ -873,18 +875,23 @@ let pinnedDay = loadStorage('pinnedDay', null);
             document.getElementById("summaryModal").classList.add("active");
         }
 
-        function setMealStatus(status) {
-            let cell = document.getElementById(`cell_${currentMealId}`);
-            if (mealStatuses[currentMealId] === status) {
-                delete mealStatuses[currentMealId]; cell.classList.remove('meal-eaten', 'meal-skipped');
-                document.getElementById("btnEaten").classList.remove('active'); document.getElementById("btnSkipped").classList.remove('active');
+        function toggleMealEatenQuick(day, mIdx, isChecked) {
+            let mealId = `d${day}_m${mIdx}`;
+            let cell = document.getElementById(`cell_${mealId}`);
+            
+            if (isChecked) {
+                mealStatuses[mealId] = 'eaten';
+                cell.classList.remove('meal-skipped');
+                cell.classList.add('meal-eaten');
+                showToast("Zjedol som ✅");
             } else {
-                mealStatuses[currentMealId] = status; cell.classList.remove('meal-eaten', 'meal-skipped');
-                cell.classList.add(status === 'eaten' ? 'meal-eaten' : 'meal-skipped');
-                document.getElementById("btnEaten").className = "btn-status btn-eaten" + (status === 'eaten' ? " active" : "");
-                document.getElementById("btnSkipped").className = "btn-status btn-skipped" + (status === 'skipped' ? " active" : "");
+                delete mealStatuses[mealId]; 
+                cell.classList.remove('meal-eaten', 'meal-skipped');
+                showToast("Nezjedol som ❌");
             }
-            localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses)); updateAllDaySummaries();
+            
+            localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses)); 
+            updateAllDaySummaries();
         }
 
         function addCustomFood() {
