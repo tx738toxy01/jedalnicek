@@ -233,20 +233,20 @@
         <h2 style="font-size: 1.1rem; color: var(--text-muted); font-weight: 500; margin-top: -5px; margin-bottom: 15px;">Môj cieľový denný príjem:</h2>
         
         <div class="legend-container">
-            <div class="legend-input-group" title="Zmeň cieľ Kalórií">
-                🔥 <input type="number" id="goal-cal" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('cal')"> kcal
+            <div class="legend-input-group" id="group-cal" title="Zmeň cieľ Kalórií">
+                🔥 <input type="number" id="goal-cal" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('cal')"> kcal <span id="lock-cal" onclick="toggleLock('cal')" style="cursor:pointer; margin-left:6px; font-size:1.1rem; user-select:none;">🔓</span>
             </div>
-            <div class="legend-input-group" title="Zmeň cieľ Bielkovín">
-                🥩 <input type="number" id="goal-pro" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('pro')"> g Bielkovín
+            <div class="legend-input-group" id="group-pro" title="Zmeň cieľ Bielkovín">
+                🥩 <input type="number" id="goal-pro" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('pro')"> g Bielkovín <span id="lock-pro" onclick="toggleLock('pro')" style="cursor:pointer; margin-left:6px; font-size:1.1rem; user-select:none;">🔓</span>
             </div>
-            <div class="legend-input-group" title="Zmeň cieľ Sacharidov">
-                🍞 <input type="number" id="goal-carb" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('carb')"> g Sacharidov
+            <div class="legend-input-group" id="group-carb" title="Zmeň cieľ Sacharidov">
+                🍞 <input type="number" id="goal-carb" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('carb')"> g Sacharidov <span id="lock-carb" onclick="toggleLock('carb')" style="cursor:pointer; margin-left:6px; font-size:1.1rem; user-select:none;">🔓</span>
             </div>
-            <div class="legend-input-group" title="Zmeň cieľ Tukov">
-                🥑 <input type="number" id="goal-fat" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fat')"> g Tukov
+            <div class="legend-input-group" id="group-fat" title="Zmeň cieľ Tukov">
+                🥑 <input type="number" id="goal-fat" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fat')"> g Tukov <span id="lock-fat" onclick="toggleLock('fat')" style="cursor:pointer; margin-left:6px; font-size:1.1rem; user-select:none;">🔓</span>
             </div>
-            <div class="legend-input-group" title="Zmeň cieľ Vlákniny">
-                🌾 <input type="number" id="goal-fib" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fib')"> g Vlákniny
+            <div class="legend-input-group" id="group-fib" title="Zmeň cieľ Vlákniny">
+                🌾 <input type="number" id="goal-fib" class="legend-input" onfocus="this.select()" onkeydown="if(event.key === 'Enter') this.blur()" onchange="updateGoal('fib')"> g Vlákniny <span id="lock-fib" onclick="toggleLock('fib')" style="cursor:pointer; margin-left:6px; font-size:1.1rem; user-select:none;">🔓</span>
             </div>
         </div>
         
@@ -386,6 +386,28 @@
         let customFoods = loadStorage('customFoods', {});
         let userSwaps = loadStorage('userSwaps', {});
 
+        let lockedGoals = loadStorage('lockedGoals', { cal: false, pro: false, carb: false, fat: false, fib: false });
+
+        function toggleLock(type) {
+            lockedGoals[type] = !lockedGoals[type];
+            localStorage.setItem('lockedGoals', JSON.stringify(lockedGoals));
+            updateLockUI();
+            showToast(lockedGoals[type] ? `Cieľ pre ${type.toUpperCase()} bol uzamknutý 🔒` : `Cieľ pre ${type.toUpperCase()} bol odomknutý 🔓`);
+        }
+
+        function updateLockUI() {
+            Object.keys(lockedGoals).forEach(type => {
+                let lockEl = document.getElementById(`lock-${type}`);
+                let groupEl = document.getElementById(`group-${type}`);
+                if (lockEl && groupEl) {
+                    lockEl.innerText = lockedGoals[type] ? "🔒" : "🔓";
+                    // Ak je uzamknuté, zvýrazníme celé okienko plnou čiarou
+                    groupEl.style.borderStyle = lockedGoals[type] ? "solid" : "dashed";
+                    groupEl.style.borderColor = lockedGoals[type] ? "var(--primary)" : "transparent";
+                }
+            });
+        }
+
         let currentMealPlan = {}; 
         let pools = { 0:[], 1:[], 2:[], 3:[], 4:[] }; 
         
@@ -485,6 +507,7 @@ let pinnedDay = loadStorage('pinnedDay', null);
         }
 
         function initApp() {
+            updateLockUI();
             setInputsFromGoals();
             if (!chosenMealsTimeline || typeof chosenMealsTimeline[1] === 'undefined') {
                 chosenMealsTimeline = {};
@@ -502,53 +525,93 @@ let pinnedDay = loadStorage('pinnedDay', null);
             document.getElementById("goal-fib").value = GOALS.fib;
         }
 
-        function generateEntireNewWeek(shouldReloadPage = true) {
-            chosenMealsTimeline = {};
-            for (let day = 1; day <= 7; day++) {
-                chosenMealsTimeline[day] = [];
+        // 1. NOVÝ NÁSTROJ: Inteligentný vyhľadávač najlepšej kombinácie pre daný deň
+        function findBestComboForDay(day) {
+            let bestCombo = [0, 0, 0, 0, 0];
+            let bestDiff = Infinity;
+            
+            let originalTimeline = JSON.parse(JSON.stringify(chosenMealsTimeline));
+            if (!chosenMealsTimeline[day]) chosenMealsTimeline[day] = [0,0,0,0,0];
+
+            // Zvýšené na 300 pokusov pre dokonalejšie hľadanie pri prísnych zámkoch
+            for(let i = 0; i < 300; i++) {
+                let testCombo = [];
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
-                    chosenMealsTimeline[day].push(Math.floor(Math.random() * pools[mIdx].length)); 
+                    testCombo.push(Math.floor(Math.random() * pools[mIdx].length));
+                }
+                
+                chosenMealsTimeline[day] = testCombo;
+                generateScaledPlan(); 
+                
+                let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
+                currentMealPlan[day].forEach(meal => {
+                    sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
+                });
+                
+                // Základné výpočty odchýlok
+                let calDiff = Math.abs(sums.cal - GOALS.cal);
+                let proDiff = Math.abs(sums.pro - GOALS.pro) * 4;
+                let carbDiff = Math.abs(sums.carb - GOALS.carb) * 4;
+                let fatDiff = Math.abs(sums.fat - GOALS.fat) * 9;
+                let fibDiff = Math.abs(sums.fib - GOALS.fib) * 4;
+
+                // TU JE KĽÚČOVÁ ZMENA: Ak je makro zamknuté, akákoľvek chyba dostane 1000-násobnú penalizáciu.
+                // Algoritmus radšej obetuje presnosť odomknutých makier, len aby vyhovel zamknutému.
+                if (lockedGoals.cal) calDiff *= 1000;
+                if (lockedGoals.pro) proDiff *= 1000;
+                if (lockedGoals.carb) carbDiff *= 1000;
+                if (lockedGoals.fat) fatDiff *= 1000;
+                if (lockedGoals.fib) fibDiff *= 1000;
+
+                let diff = calDiff + proDiff + carbDiff + fatDiff + fibDiff;
+                           
+                if(diff < bestDiff) {
+                    bestDiff = diff;
+                    bestCombo = [...testCombo];
                 }
             }
+            
+            chosenMealsTimeline = originalTimeline;
+            return bestCombo;
+        }
+
+        // 2. VYLEPŠENÝ TÝŽDEŇ: Použije inteligentný výber pre každý deň
+        function generateEntireNewWeek(shouldReloadPage = true) {
+            chosenMealsTimeline = {};
+            // Príprava prázdnych polí
+            for (let day = 1; day <= 7; day++) chosenMealsTimeline[day] = [0,0,0,0,0];
+
+            for (let day = 1; day <= 7; day++) {
+                chosenMealsTimeline[day] = findBestComboForDay(day);
+            }
+            
             localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
             
-            // TU JE ZMENA: Kompletné premazanie stavov "zjedol som / nezjedol som" v pamäti aplikácie aj v localStorage
             mealStatuses = {};
             localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
 
             if (shouldReloadPage) location.reload();
         }
 
-        function swapSpecificMeal(day, mIdx, poolIdx) {
-            chosenMealsTimeline[day][mIdx] = poolIdx;
-            localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
-            delete mealStatuses[`d${day}_m${mIdx}`];
-            delete customFoods[`d${day}_m${mIdx}`];
-            localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
-            localStorage.setItem('customFoods', JSON.stringify(customFoods));
-
-            generateScaledPlan();
-            renderGrid();
-            updateAllDaySummaries();
-        }
-
-        function reloadSingleMeal(day, mIdx, shouldAlert = false) {
-            let currentPool = pools[mIdx];
-            swapSpecificMeal(day, mIdx, Math.floor(Math.random() * currentPool.length));
-            if(shouldAlert) alert("Jedlo bolo nahradené iným náhodným chodom.");
-        }
-
+        // 3. VYLEPŠENÝ DEŇ: Použije inteligentný výber len pre konkrétny deň
         function reloadWholeDay(day) {
-            if(confirm(`Chceš vygenerovať úplne nové náhodné jedlá pre celý tento deň?`)) {
+            if(confirm(`Chceš inteligentne vygenerovať nové jedlá pre tento deň tak, aby čo najlepšie sadli do makier? (Apka vyskúša 100 kombinácií na pozadí)`)) {
+                chosenMealsTimeline[day] = findBestComboForDay(day);
+                
+                // Premažeme staré odškrtnuté jedlá a vlastné suroviny pre tento deň
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
-                    chosenMealsTimeline[day][mIdx] = Math.floor(Math.random() * pools[mIdx].length);
                     delete mealStatuses[`d${day}_m${mIdx}`];
                     delete customFoods[`d${day}_m${mIdx}`];
                 }
+                
                 localStorage.setItem('chosenMealsTimeline', JSON.stringify(chosenMealsTimeline));
                 localStorage.setItem('mealStatuses', JSON.stringify(mealStatuses));
                 localStorage.setItem('customFoods', JSON.stringify(customFoods));
-                generateScaledPlan(); renderGrid(); updateAllDaySummaries();
+                
+                generateScaledPlan(); 
+                renderGrid(); 
+                updateAllDaySummaries();
+                showToast("Deň bol inteligentne pregenerovaný 🧠");
             }
         }
 
