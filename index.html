@@ -389,10 +389,28 @@
         let lockedGoals = loadStorage('lockedGoals', { cal: false, pro: false, carb: false, fat: false, fib: false });
 
         function toggleLock(type) {
-            lockedGoals[type] = !lockedGoals[type];
+            const MIN_VALUES = { cal: 1200, pro: 40, carb: 30, fat: 25, fib: 10 };
+            let inputEl = document.getElementById(`goal-${type}`);
+            let val = parseInt(inputEl.value);
+
+            if (!lockedGoals[type]) {
+                if (!val || val < MIN_VALUES[type]) {
+                    showToast(`Zadaj aspoň ${MIN_VALUES[type]} pred uzamknutím 🔒`);
+                    inputEl.value = MIN_VALUES[type]; 
+                    return; 
+                }
+                lockedGoals[type] = true;
+                GOALS[type] = val; 
+                showToast(`Cieľ pre ${type.toUpperCase()} bol uzamknutý 🔒`);
+            } else {
+                lockedGoals[type] = false;
+                GOALS[type] = null; 
+                showToast(`Cieľ pre ${type.toUpperCase()} bol odomknutý 🔓`);
+            }
+            
             localStorage.setItem('lockedGoals', JSON.stringify(lockedGoals));
+            localStorage.setItem('userGoals', JSON.stringify(GOALS));
             updateLockUI();
-            showToast(lockedGoals[type] ? `Cieľ pre ${type.toUpperCase()} bol uzamknutý 🔒` : `Cieľ pre ${type.toUpperCase()} bol odomknutý 🔓`);
         }
 
         function updateLockUI() {
@@ -570,18 +588,13 @@ let pinnedDay = loadStorage('pinnedDay', null);
                 
                 // TU JE ZMENA: Výpočet chýb je v percentách (0.1 znamená 10% mimo cieľa). 
                 // Tým pádom malá vláknina už nebude valcovaná veľkými kalóriami.
-                let calPct = Math.abs(sums.cal - GOALS.cal) / GOALS.cal;
-                let proPct = Math.abs(sums.pro - GOALS.pro) / GOALS.pro;
-                let carbPct = Math.abs(sums.carb - GOALS.carb) / GOALS.carb;
-                let fatPct = Math.abs(sums.fat - GOALS.fat) / GOALS.fat;
-                let fibPct = Math.abs(sums.fib - GOALS.fib) / GOALS.fib;
-
                 let diff = 0;
-                diff += calPct * (lockedGoals.cal ? 10000 : 1);
-                diff += proPct * (lockedGoals.pro ? 10000 : 1);
-                diff += carbPct * (lockedGoals.carb ? 10000 : 1);
-                diff += fatPct * (lockedGoals.fat ? 10000 : 1);
-                diff += fibPct * (lockedGoals.fib ? 10000 : 1);
+                
+                if (lockedGoals.cal && GOALS.cal) diff += Math.abs(sums.cal - GOALS.cal) / GOALS.cal;
+                if (lockedGoals.pro && GOALS.pro) diff += Math.abs(sums.pro - GOALS.pro) / GOALS.pro;
+                if (lockedGoals.carb && GOALS.carb) diff += Math.abs(sums.carb - GOALS.carb) / GOALS.carb;
+                if (lockedGoals.fat && GOALS.fat) diff += Math.abs(sums.fat - GOALS.fat) / GOALS.fat;
+                if (lockedGoals.fib && GOALS.fib) diff += Math.abs(sums.fib - GOALS.fib) / GOALS.fib;
                            
                 if(diff < bestDiff) {
                     bestDiff = diff;
@@ -635,47 +648,21 @@ let pinnedDay = loadStorage('pinnedDay', null);
 
         function updateGoal(type) {
             let val = parseInt(document.getElementById(`goal-${type}`).value);
-            
-            // Absolútne minimá, aby algoritmus a gramáže nespadli na nezmyselné čísla
             const MIN_VALUES = { cal: 1200, pro: 40, carb: 30, fat: 25, fib: 10 };
-            const TYPE_NAMES = { cal: "kalórií (min 1200 kcal)", pro: "bielkovín (min 40g)", carb: "sacharidov (min 30g)", fat: "tukov (min 25g)", fib: "vlákniny (min 10g)" };
             
-            if (!val || val < MIN_VALUES[type]) {
-                alert(`⚠️ Hodnota je príliš nízka pre reálny jedálniček! Minimum pre cieľ ${TYPE_NAMES[type]} bolo automaticky nastavené, aby sa dali správne prepočítať suroviny.`);
+            if (val && val < MIN_VALUES[type]) {
+                showToast(`Minimum pre toto makro je ${MIN_VALUES[type]}`);
                 val = MIN_VALUES[type];
                 document.getElementById(`goal-${type}`).value = val;
             }
 
-            GOALS[type] = val;
-            let baseCarbCals = BASE_GOALS.carb * 4;
-            let baseFatCals = BASE_GOALS.fat * 9;
-            let flexRatio = baseCarbCals / (baseCarbCals + baseFatCals); 
-            let minCalsRequired = (GOALS.pro * 4); 
+            if (val) {
+                GOALS[type] = val;
+            } else {
+                GOALS[type] = null; 
+            }
             
-            if (GOALS.cal < minCalsRequired) {
-                alert(`Telo potrebuje aspoň ${minCalsRequired} kcal pre ${GOALS.pro}g bielkovín. Nastavujem kalórie.`);
-                GOALS.cal = minCalsRequired;
-            }
-            let remainingCals = GOALS.cal - (GOALS.pro * 4);
-
-            if (type === 'carb') {
-                remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.carb * 4);
-                if (remainingCals < 0) { GOALS.cal = (GOALS.pro * 4) + (GOALS.carb * 4); GOALS.fat = 0; } 
-                else GOALS.fat = Math.round(remainingCals / 9);
-            } else if (type === 'fat') {
-                remainingCals = GOALS.cal - (GOALS.pro * 4) - (GOALS.fat * 9);
-                if (remainingCals < 0) { GOALS.cal = (GOALS.pro * 4) + (GOALS.fat * 9); GOALS.carb = 0; } 
-                else GOALS.carb = Math.round(remainingCals / 4);
-            } else if (type === 'cal' || type === 'pro') {
-                let newCarbCals = remainingCals * flexRatio;
-                let newFatCals = remainingCals * (1 - flexRatio);
-                GOALS.carb = Math.round(newCarbCals / 4);
-                GOALS.fat = Math.round(newFatCals / 9);
-            }
-
-            setInputsFromGoals();
             localStorage.setItem('userGoals', JSON.stringify(GOALS));
-            generateScaledPlan(); renderGrid(); updateAllDaySummaries();
         }
 
         function generateScaledPlan() {
