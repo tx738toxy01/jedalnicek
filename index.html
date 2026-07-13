@@ -564,7 +564,6 @@ let pinnedDay = loadStorage('pinnedDay', null);
             document.getElementById("goal-fib").value = GOALS.fib;
         }
 
-        // 1. NOVÝ NÁSTROJ: Inteligentný vyhľadávač najlepšej kombinácie pre daný deň
         function findBestComboForDay(day) {
             let bestCombo = [0, 0, 0, 0, 0];
             let bestDiff = Infinity;
@@ -578,32 +577,37 @@ let pinnedDay = loadStorage('pinnedDay', null);
                     testCombo.push(Math.floor(Math.random() * pools[mIdx].length));
                 }
                 
-                chosenMealsTimeline[day] = testCombo;
-                generateScaledPlan(); 
-                
-                let sums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
-                currentMealPlan[day].forEach(meal => {
-                    sums.cal += meal.cal; sums.pro += meal.pro; sums.carb += meal.carb; sums.fat += meal.fat; sums.fib += meal.fib;
-                });
+                // Vypočíta surové (neprepočítané) makrá tohto náhodného komba
+                let baseSums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
+                for (let mIdx = 0; mIdx <= 4; mIdx++) {
+                    let meal = pools[mIdx][testCombo[mIdx]];
+                    if (meal && meal.ing) {
+                        meal.ing.forEach(ing => {
+                            if (!ing.isCustom) {
+                                baseSums.cal += ing.cal; baseSums.pro += ing.pro; 
+                                baseSums.carb += ing.carb; baseSums.fat += ing.fat; baseSums.fib += ing.fib;
+                            }
+                        });
+                    }
+                }
                 
                 let diff = 0;
                 
-                // Základná penalizácia za nedodržanie zamknutých makier
-                if (lockedGoals.cal && GOALS.cal) diff += Math.abs(sums.cal - GOALS.cal) / GOALS.cal;
-                if (lockedGoals.pro && GOALS.pro) diff += Math.abs(sums.pro - GOALS.pro) / GOALS.pro;
-                if (lockedGoals.carb && GOALS.carb) diff += Math.abs(sums.carb - GOALS.carb) / GOALS.carb;
-                if (lockedGoals.fat && GOALS.fat) diff += Math.abs(sums.fat - GOALS.fat) / GOALS.fat;
-                if (lockedGoals.fib && GOALS.fib) diff += Math.abs(sums.fib - GOALS.fib) / GOALS.fib;
+                // Zisťujeme len to, či je základ jedál zhruba podobný cieľom, aby apka neznásobovala jedlo 10-krát
+                if (lockedGoals.cal && GOALS.cal) diff += Math.abs(baseSums.cal - GOALS.cal) / GOALS.cal;
+                if (lockedGoals.pro && GOALS.pro) diff += Math.abs(baseSums.pro - GOALS.pro) / GOALS.pro;
+                if (lockedGoals.carb && GOALS.carb) diff += Math.abs(baseSums.carb - GOALS.carb) / GOALS.carb;
+                if (lockedGoals.fat && GOALS.fat) diff += Math.abs(baseSums.fat - GOALS.fat) / GOALS.fat;
                 
-                // POKUTA ZA NUDU: 
-                // Ak sa nejaký chod zhoduje s tým, čo si už jedol v predchádzajúce dni,
-                // dostane to brutálnu prirážku (+0.5). To donúti apku vyberať iné jedlá!
+                // BRUTÁLNA POKUTA ZA NUDU:
+                // Ak sa jedlo už nachádza v niektorom z predošlých dní, dostane prirážku +10.0 (1000%).
+                // Apka ho tak nevyberie, pokiaľ to nebude absolútne nevyhnutné.
                 let reusePenalty = 0;
                 for (let prevDay = 1; prevDay < day; prevDay++) {
                     if (chosenMealsTimeline[prevDay]) {
                         for(let m = 0; m <= 4; m++) {
                             if (chosenMealsTimeline[prevDay][m] === testCombo[m]) {
-                                reusePenalty += 0.5; 
+                                reusePenalty += 10.0; 
                             }
                         }
                     }
@@ -683,60 +687,20 @@ let pinnedDay = loadStorage('pinnedDay', null);
         function generateScaledPlan() {
             currentMealPlan = {};
             
-            // 1. Zistíme ciele. Ak je niečo vymazané/odomknuté, použijeme záchytný bod z BASE_GOALS
-            let targetPro = lockedGoals.pro && GOALS.pro ? GOALS.pro : BASE_GOALS.pro;
-            let targetCarb = lockedGoals.carb && GOALS.carb ? GOALS.carb : BASE_GOALS.carb;
-            let targetFat = lockedGoals.fat && GOALS.fat ? GOALS.fat : BASE_GOALS.fat;
-            let targetCal = lockedGoals.cal && GOALS.cal ? GOALS.cal : BASE_GOALS.cal;
-
-            let rPro = targetPro / BASE_GOALS.pro;
-            let rCarb = targetCarb / BASE_GOALS.carb;
-            let rFat = targetFat / BASE_GOALS.fat;
-
-            // 2. Ak si ZAMKOL kalórie, odomknuté makrá musíme stlačiť/roztiahnuť tak, aby kalórie presne sedeli!
-            if (lockedGoals.cal) {
-                let lockedCals = 0;
-                if (lockedGoals.pro) lockedCals += (targetPro * 4);
-                if (lockedGoals.carb) lockedCals += (targetCarb * 4);
-                if (lockedGoals.fat) lockedCals += (targetFat * 9);
-
-                let remainingCals = targetCal - lockedCals;
-                if (remainingCals < 0) remainingCals = 0;
-
-                let defaultUnlockedCals = 0;
-                if (!lockedGoals.pro) defaultUnlockedCals += (BASE_GOALS.pro * 4);
-                if (!lockedGoals.carb) defaultUnlockedCals += (BASE_GOALS.carb * 4);
-                if (!lockedGoals.fat) defaultUnlockedCals += (BASE_GOALS.fat * 9);
-
-                let flexRatio = defaultUnlockedCals > 0 ? (remainingCals / defaultUnlockedCals) : 1;
-
-                if (!lockedGoals.pro) rPro = flexRatio;
-                if (!lockedGoals.carb) rCarb = flexRatio;
-                if (!lockedGoals.fat) rFat = flexRatio;
-            } else {
-                // Ak kalórie nie sú zamknuté, odomknuté makrá sa neškrtia
-                if (!lockedGoals.pro) rPro = 1;
-                if (!lockedGoals.carb) rCarb = 1;
-                if (!lockedGoals.fat) rFat = 1;
-            }
-
-            let rCal = targetCal / BASE_GOALS.cal;
-            
             for (let day = 1; day <= 7; day++) {
                 currentMealPlan[day] = [];
+                
+                let baseSums = { cal: 0, pro: 0, carb: 0, fat: 0, fib: 0 };
+                let dailyBaseMeals = [];
+                
                 for (let mIdx = 0; mIdx <= 4; mIdx++) {
-                    let poolIdx = chosenMealsTimeline[day][mIdx] || 0;
+                    let poolIdx = chosenMealsTimeline[day][mIdx];
+                    if (poolIdx === undefined) poolIdx = 0;
                     let mealBlueprint = pools[mIdx][poolIdx];
                     if(!mealBlueprint) continue;
-
-                    let mealCopy = JSON.parse(JSON.stringify(mealBlueprint));
-                    mealCopy.day = day; mealCopy.mIdx = mIdx;
                     
-                    let cID = `d${day}_m${mIdx}`;
-                    if (customFoods[cID]) mealCopy.ing = mealCopy.ing.concat(JSON.parse(JSON.stringify(customFoods[cID])).map(c=>({encode:true, isCustom:true, ...c})));
-
-                    mealCopy.cal = 0; mealCopy.pro = 0; mealCopy.carb = 0; mealCopy.fat = 0; mealCopy.fib = 0;
-
+                    let mealCopy = JSON.parse(JSON.stringify(mealBlueprint));
+                    
                     mealCopy.ing.forEach((i, iIdx) => {
                         if(!i.isCustom) {
                             let swapKey = `d${day}_m${mIdx}_i${iIdx}`;
@@ -746,7 +710,60 @@ let pinnedDay = loadStorage('pinnedDay', null);
                                 i.text = `${newQtyGrams.toFixed(1)} g ${sd.n}`;
                                 i.pro = (newQtyGrams * sd.p / 100); i.carb = (newQtyGrams * sd.s / 100);
                                 i.fat = (newQtyGrams * sd.t / 100); i.fib = (newQtyGrams * sd.v / 100);
+                                i.cal = (newQtyGrams * sd.c / 100);
                             }
+                            baseSums.cal += i.cal; baseSums.pro += i.pro; baseSums.carb += i.carb; 
+                            baseSums.fat += i.fat; baseSums.fib += i.fib;
+                        }
+                    });
+                    dailyBaseMeals.push(mealCopy);
+                }
+                
+                // DYNAMICKÉ CIELE PRE KONKRÉTNY DEŇ
+                let tPro = (lockedGoals.pro && GOALS.pro) ? GOALS.pro : baseSums.pro;
+                let tCarb = (lockedGoals.carb && GOALS.carb) ? GOALS.carb : baseSums.carb;
+                let tFat = (lockedGoals.fat && GOALS.fat) ? GOALS.fat : baseSums.fat;
+                
+                if (lockedGoals.cal && GOALS.cal) {
+                    let lockedCals = 0;
+                    if (lockedGoals.pro) lockedCals += tPro * 4;
+                    if (lockedGoals.carb) lockedCals += tCarb * 4;
+                    if (lockedGoals.fat) lockedCals += tFat * 9;
+                    
+                    let remainingCals = GOALS.cal - lockedCals;
+                    if (remainingCals < 0) remainingCals = 0;
+                    
+                    let unlockedBaseCals = 0;
+                    if (!lockedGoals.pro) unlockedBaseCals += baseSums.pro * 4;
+                    if (!lockedGoals.carb) unlockedBaseCals += baseSums.carb * 4;
+                    if (!lockedGoals.fat) unlockedBaseCals += baseSums.fat * 9;
+                    
+                    let flex = unlockedBaseCals > 0 ? (remainingCals / unlockedBaseCals) : 1;
+                    
+                    // Odomknuté makrá sa matematicky stlačia/roztiahnu, aby presne vyplnili kalórie
+                    if (!lockedGoals.pro) tPro = baseSums.pro * flex;
+                    if (!lockedGoals.carb) tCarb = baseSums.carb * flex;
+                    if (!lockedGoals.fat) tFat = baseSums.fat * flex;
+                }
+                
+                // Konkrétne násobky pre tento jeden deň
+                let rPro = baseSums.pro > 0 ? (tPro / baseSums.pro) : 1;
+                let rCarb = baseSums.carb > 0 ? (tCarb / baseSums.carb) : 1;
+                let rFat = baseSums.fat > 0 ? (tFat / baseSums.fat) : 1;
+                let rCal = baseSums.cal > 0 ? ((lockedGoals.cal && GOALS.cal ? GOALS.cal : baseSums.cal) / baseSums.cal) : 1;
+
+                for (let mIdx = 0; mIdx <= 4; mIdx++) {
+                    let mealCopy = dailyBaseMeals[mIdx];
+                    if(!mealCopy) continue;
+                    
+                    mealCopy.day = day; mealCopy.mIdx = mIdx;
+                    let cID = `d${day}_m${mIdx}`;
+                    if (customFoods[cID]) mealCopy.ing = mealCopy.ing.concat(JSON.parse(JSON.stringify(customFoods[cID])).map(c=>({encode:true, isCustom:true, ...c})));
+
+                    mealCopy.cal = 0; mealCopy.pro = 0; mealCopy.carb = 0; mealCopy.fat = 0; mealCopy.fib = 0;
+
+                    mealCopy.ing.forEach((i, iIdx) => {
+                        if(!i.isCustom) {
                             let match = i.text.match(/^([0-9.,]+)\s*([a-zA-ZáčďéíľĺňóôŕšťúýžÁČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ%\/]+)\s+(.+)$/);
                             let effectiveRatio = rCal; 
                             
